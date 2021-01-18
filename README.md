@@ -11,7 +11,7 @@ If you want to setup the bot, [I strongly advise you not to.](https://discord.co
 ## Credits
 - The [TBKBot Team](https://github.com/TBKBot) for teaching me programming and being retards (also I stole their wait for)
 - [Anto](https://github.com/antoniokf5) for designing the bot's logo and helping me out with a few commands
-- [LegitSi](https://github.com/LegitSi) for helping me create the generateseason command
+- [LegitSi](https://github.com/LegitSi) for helping me rewrite the generateseason command
 - [Stella](https://github.com/InterStella0/stella_bot) for creating the help class tutorial
 - Anyone that made a tag on the discord.py server and anyone that helped me there when I was a beginner
 If you see your code make a pull request
