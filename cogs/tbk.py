@@ -40,8 +40,9 @@ class TBK(commands.Cog, name='TBK Commands'):
     @commands.command(aliases=['tbk_retards'])
     async def tbkretards(self, ctx):
         list_of_retards = []
-        for degen in self.tbk.members:
-            if self.tbk.get_role(742633787900559441) and self.tbk.get_role(705295405256015913) in degen.roles:
+        tbk = self.bot.get_guild(703420768360595456)
+        for degen in tbk.members:
+            if tbk.get_role(742633787900559441) and tbk.get_role(705295405256015913) in degen.roles:
                 list_of_retards.append(f"<@{str(degen.id)}>")
         list_2 = []
         number = 10

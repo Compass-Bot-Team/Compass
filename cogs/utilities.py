@@ -58,6 +58,7 @@ class Utilities(commands.Cog):
         embed.add_field(name="Typing", value=str(typing) + "ms")
         embed.add_field(name="API latency", value=str(api_latency) + "ms", inline=True)
         await message.edit(embed=embed)
+        return
 
     @commands.command(aliases=["stats", "analytics"])
     async def about(self, ctx):
@@ -78,6 +79,7 @@ class Utilities(commands.Cog):
                              f"Operating System: {platform.system()}", False)
         objectfile.add_field(embed, "Links",
                              f"Invite me [here!](https://discord.com/oauth2/authorize?client_id=769308147662979122&permissions=2147352567&scope=bot)\n"
+                             f"Go to my GitHub [here!](https://github.com/Compass-Bot-Team/Compass)\n"
                              f"View my website + future dashboard [here!](https://compasswebsite.dev)\n"
                              f"Join the support server [here!](https://discord.gg/H5cBqhy4RD)", False)
         embed.set_footer(text=f"Made in discord.py {pkg_resources.get_distribution('discord.py').version}!")

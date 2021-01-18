@@ -18,6 +18,7 @@ mystbin_client = mystbin.Client()
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.paginator = commands.Paginator()
 
     def tts_moment(self, text):
         ret = io.BytesIO()
@@ -341,6 +342,8 @@ class Fun(commands.Cog):
 
     async def classify(self, mph):
         global classification
+        if mph > 0:
+            classification = "Tropical Depression"
         if mph > 39:
             classification = "Tropical Storm"
         if mph > 74:
@@ -351,52 +354,62 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=['generate_season'])
     async def generateseason(self, ctx):
-        global hurricane_amount
-        global acceptable
+        tropical_depression_list = objectfile.numbers
         hurricane_list_combined = objectfile.twentytwentyhurricanelist + objectfile.greekhurricanelist
-        hurricane_num = 0
+        tropical_depressions = 0
+        tropical_storms = 0
+        hurricanes = 0
+        major_hurricanes = 0
         la_nina_or_el_nino = random.choice(['La Nina', 'El Nino'])
-        chance = random.randint(1, 100)
-        acceptable = await objectfile.acceptable(chance)
         if la_nina_or_el_nino == 'La Nina':
             hurricane_amount = random.randint(5, 37)
         if la_nina_or_el_nino == 'El Nino':
             hurricane_amount = random.randint(2, 13)
-        hurricane_list_one = ""
-        hurricane_list_two = ""
-        hurricane_list_three = ""
-        hurricane_list_four = ""
-        pages = 0
-        page_list = []
+        tropical_cyclones = ""
         for _ in range(hurricane_amount):
+            chance = random.randint(1, 100)
+            if chance > 0:
+                acceptable = [30, 35, 40, 45, 50]
+            if chance > 20:
+                acceptable = [30, 35, 40, 45, 50, 60, 65]
+            if chance > 30:
+                acceptable = [30, 35, 50, 45, 50, 60, 65, 70]
+            if chance > 50:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75]
+            if chance > 60:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100]
+            if chance > 70:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115]
+            if chance > 80:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                              145, 150]
+            if chance > 90:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                              145, 150, 155, 160]
+            if chance > 95:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                              145, 150, 155, 160, 165, 175, 180]
+            if chance > 99:
+                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                              145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
             mph = random.choice(acceptable)
             kph = round(mph / 1.151)
-            if 0 <= hurricane_num <= 10:
-                hurricane_list_one += f"{await self.classify(mph)} {hurricane_list_combined[hurricane_num]}, with {mph} mph winds ({kph} kph winds)\n"
-            if 10 <= hurricane_num <= 20:
-                hurricane_list_two += f"{await self.classify(mph)} {hurricane_list_combined[hurricane_num]}, with {mph} mph winds ({kph} kph winds)\n"
-            if 20 <= hurricane_num <= 30:
-                hurricane_list_three += f"{await self.classify(mph)} {hurricane_list_combined[hurricane_num]}, with {mph} mph winds ({kph} kph winds)\n"
-            if 30 <= hurricane_num <= 40:
-                hurricane_list_four += f"{await self.classify(mph)} {hurricane_list_combined[hurricane_num]}, with {mph} mph winds ({kph} kph winds)\n"
-            hurricane_num += 1
-        if hurricane_num < 0:
-            page_list.append(objectfile.twoembed("2020 generated Hurricane season",
-                                                 hurricane_list_one))
-        if hurricane_num < 10:
-            page_list.append(objectfile.twoembed("2020 generated Hurricane season",
-                                                 hurricane_list_two))
-        if hurricane_num < 20:
-            page_list.append(objectfile.twoembed("2020 generated Hurricane season",
-                                                 hurricane_list_three))
-        if hurricane_num < 30:
-            page_list.append(objectfile.twoembed("2020 generated Hurricane season",
-                                                 hurricane_list_four))
-        await ctx.send(embed=page_list[pages])
-        #emote_list = ['\U00002b05\U0000fe0f', '\U000027a1\U000027a1', '\U0001f1fd']
-        #await send.add_reaction('\U00002b05\U0000fe0f')
-        #await send.add_reaction['\U000027a1\U000027a1']
-        #await send.add_reaction['\U0001f1fd']
+            if mph < 39:
+                tropical_cyclones += (f"{await self.classify(mph)} {tropical_depression_list[tropical_depressions]}, with {mph} mph winds ({kph} kph winds)\n")
+                tropical_depressions += 1
+            else:
+                tropical_cyclones += (f"{await self.classify(mph)} {hurricane_list_combined[tropical_storms]}, with {mph} mph winds ({kph} kph winds)\n")
+                tropical_depressions += 1
+                tropical_storms += 1
+            if mph > 74:
+                hurricanes += 1
+            if mph > 110:
+                major_hurricanes += 1
+        await ctx.send(str(f"Depressions: {tropical_depressions}\n"
+                           f"Storms: {tropical_storms}\n"
+                           f"Hurricanes: {hurricanes}\n"
+                           f"Major Hurricanes: {major_hurricanes}\n"
+                           f"{tropical_cyclones}"))
 
 def setup(bot):
     bot.add_cog(Fun(bot))

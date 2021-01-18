@@ -130,29 +130,6 @@ def mainembed(header, title1, text1):
     embed_var.add_field(name=str(title1), value=str(text1), inline=True)
     return embed_var
 
-async def acceptable(chance):
-    global acceptable
-    if chance > 1:
-        acceptable = [40, 45, 50]
-    if chance > 20:
-        acceptable = [40, 45, 50, 60, 65, 70, 75]
-    if chance > 40:
-        acceptable = [40, 45, 50, 60, 65, 70, 75, 80, 85, 90]
-    if chance > 60:
-        acceptable = [40, 45, 50, 60, 65, 70, 75, 80, 95, 90, 100, 105, 110, 115]
-    if chance > 80:
-        acceptable = [40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150]
-    if chance > 90:
-        acceptable = [40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155,
-                      160]
-    if chance > 95:
-        acceptable = [40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155,
-                      160, 165, 175, 180]
-    if chance > 99:
-        acceptable = [40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155,
-                      160, 165, 175, 180, 185, 190, 195]
-        return acceptable
-
 def add_field(embed, title1, text1, inline1):
     embed_var = embed
     embed_var.add_field(name=title1, value=text1, inline=inline1)
