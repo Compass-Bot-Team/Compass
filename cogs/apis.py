@@ -29,7 +29,7 @@ class APIs(commands.Cog):
         async with aiohttp.ClientSession() as cs:
             async with cs.get(f"https://api.2b2t.dev/prioq") as q:
                 queueapi = await q.json()
-                embed = discord.Embed(colour=discord.Colour.from_rgb(122, 141, 207), title='2b2t Priority Queue Stats')
+                embed = discord.Embed(colour=0x202225, title='2b2t Priority Queue Stats')
                 embed.add_field(name='Users In Queue', value=str(queueapi[1]), inline=True)
                 embed.add_field(name='ETA to join 2b2t', value=str(queueapi[2]), inline=True)
                 embed.set_footer(text='Courtesy of https://2b2t.dev | https://api.2b2t.dev/prioq')
@@ -40,7 +40,7 @@ class APIs(commands.Cog):
         async with aiohttp.ClientSession() as cs:
             async with cs.get(f"https://api.2b2t.dev/seen?username={arg}") as l:
                 lastseenapi = await l.json()
-                embed = discord.Embed(colour=discord.Colour.from_rgb(122, 141, 207), title=f"{arg} was last seen at...")
+                embed = discord.Embed(colour=0x202225, title=f"{arg} was last seen at...")
                 embed.add_field(name=f'All times in EDT',
                                 value=f"{lastseenapi['seen']}", inline=True)
                 embed.set_footer(text=f'Courtesy of https://2b2t.dev | https://api.2b2t.dev/seen?username={arg}')
@@ -146,20 +146,6 @@ class APIs(commands.Cog):
 
         m = MyMenu()
         await m.start(ctx)
-
-    @commands.command()
-    async def chat(self, ctx, *, arg=None):
-        if arg is None:
-            embed = objectfile.failembed("You need a message!",
-                                         "Example: compass!chat How's your day?",
-                                         "Try it again!")
-            await ctx.send(embed=embed)
-        else:
-            chatbot = await client.chatbot(arg)
-            embed = discord.Embed(color=0x202225, title=chatbot,
-                                  description="Keep going with;\n"
-                                              "compass!chat example")
-            await ctx.send(embed=embed)
 
     @commands.command()
     async def cat(self, ctx):

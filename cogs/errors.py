@@ -3,6 +3,7 @@ import math
 import discord
 import psutil
 import wikipedia
+import traceback
 import objectfile
 import logging
 import yaml
@@ -92,24 +93,18 @@ class Errors(commands.Cog):
                                                              f" and report the bug."))
                 else:
                     # Github Issues
+                    channel = self.bot.get_channel(777226053105614860)
+                    traceback_text = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
                     repo = g.get_repo(f"Compass-Bot-Team/Compass")
                     issue_url_but_what = repo.create_issue(title=f"Error in {ctx.command}.", assignee="DontTreadOnGerman",
-                                                           body=f"{error}\n\n{logger.exception(error)}")
+                                                           body=f"{traceback_text}\n\n{logger.exception(error)}")
                     issue_url = issue_url_but_what.url
-
-                    channel = self.bot.get_channel(777226053105614860)
-                    author = ctx.message.author
-
-                    embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0), title=f"Error in {ctx.command}!",
-                                          description=f"{error}\n\n{logger.exception(error)}")
+                    embed = discord.Embed(timestamp=datetime.utcnow(),
+                                          colour=discord.Colour.from_rgb(211, 0, 0), title=f"Error in {ctx.command}!",
+                                          description=f"```py\n{traceback_text}\n```\n\n{logger.exception(error)}")
                     embed.set_author(name="There was an error.")
-                    embed.add_field(name="Server", value=f"{ctx.guild.id}", inline=True)
                     embed.add_field(name="Issue URL", value=str(issue_url).replace("api.", "").replace("repos/", ""), inline=False)
-                    embed.timestamp = datetime.now()
                     await channel.send(embed=embed)
-
-                    embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0), title=f"{author}, my bad.")
-                    embed.add_field(name=f"Error in command {ctx.command}", value=f"```py\n{error}\n\n{logger.exception(error)}```", inline=True)
                     await ctx.send(embed=embed)
 
 

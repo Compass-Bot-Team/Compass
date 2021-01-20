@@ -5,13 +5,26 @@ import validators
 import sqlite3
 import typing
 import time
+import re
 import platform
 import psutil
+import asyncio
 import pkg_resources
 from objectfile import valids as valids
 from datetime import datetime
 from discord.ext import commands
 
+time_regex = re.compile("(?:(\d{1,5})(h|s|m|d))+?")
+time_dict = {"h":3600, "s":1, "m":60, "d":86400}
+
+class TimeConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        args = argument.lower()
+        matches = re.findall(time_regex, args)
+        time = 0
+        for v, k in matches:
+            time += time_dict[k]*float(v)
+            return time
 
 class Utilities(commands.Cog):
     def __init__(self, bot):
@@ -307,6 +320,28 @@ class Utilities(commands.Cog):
     @poll.command(name="number")
     async def number(self, ctx, num: int = None):
         await objectfile.number_poll(ctx.message, num)
+
+    async def timer(self, second):
+        if second == 0:
+            embed = objectfile.twoembed(f"Timer over.",
+                                        f"oh shit")
+        else:
+            embed = objectfile.twoembed(f"{time}.",
+                                        f"oh shit")
+        await asyncio.sleep(1)
+        return embed
+
+    @commands.command()
+    async def timer(self, ctx, time: int):
+        second = time
+        seconds_preserved = time
+        message = await ctx.send(embed=await self.timer(second))
+        second += seconds_preserved
+        for _ in range(seconds_preserved):
+            second -= 1
+        if second % 10 == 0:
+            await message.edit(embed=await self.timer(second))
+
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
