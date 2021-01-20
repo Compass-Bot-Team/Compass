@@ -32,6 +32,7 @@ githubkey: # Github token for any bot accounts you want (keep in mind you have t
 nasakey: # NASA api key, go to https://api.nasa.gov/ and get an api key
 omdbkey: # Omdb key for IMDB searches, get an api key at https://www.omdbapi.com/apikey.aspx
 srakey: # leave this blank (go to apis.py and take out the field yourself)
+travitiakey: # Api key for cleverbot
 # Reddit
 redditauth: # Go to the official async praw docs for this one (https://asyncpraw.readthedocs.io/)
   - # Reddit client secret

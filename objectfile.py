@@ -8,6 +8,22 @@ intents.members = True
 intents.presences = True
 
 
+async def classify(mph):
+    global classification
+    if mph > 0:
+        classification = "Tropical Depression"
+    if mph > 39:
+        ts_or_ss = random.randint(0, 100)
+        if ts_or_ss > 15:
+            classification = "Tropical Storm"
+        else:
+            classification = "Subtropical Storm"
+    if mph > 74:
+        classification = "Hurricane"
+    if mph > 110:
+        classification = "Major Hurricane"
+    return classification
+
 async def poll_classic(message):
     await message.add_reaction('\U0001F7E9')
     await message.add_reaction('\U0001F7E8')

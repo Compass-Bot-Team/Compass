@@ -113,6 +113,8 @@ if not os.path.exists(your_repo+r"\config.yml"):
     client_id = input()
     print("What is your Reddit user agent?")
     user_agent = input()
+    print("What is your Travitia api key?")
+    travitia_key = input()
     data = {"developers": [721029142602056328],
             "owners": owners,
             "password": str(password),
@@ -127,7 +129,8 @@ if not os.path.exists(your_repo+r"\config.yml"):
             "nasakey": str(nasa_key),
             "omdbkey": str(omdb_key),
             "srakey": str(sra_key),
-            "redditauth": [str(client_secret), str(client_id), str(user_agent)]}
+            "redditauth": [str(client_secret), str(client_id), str(user_agent)],
+            "travitiakey": str(travitia_key)}
     with open(your_repo+"\config.yml", "w+") as c:
         yaml.dump(data, c)
 else:

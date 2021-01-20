@@ -9,11 +9,13 @@ import mystbin
 import typing
 import gtts
 import io
+import async_cleverbot
 from databases import asqlite
-from discord.ext import commands, menus
+from discord.ext import commands
 
 ymlconfig = yaml.safe_load(open('config.yml'))
 mystbin_client = mystbin.Client()
+cleverbot = async_cleverbot.Cleverbot(ymlconfig['travitiakey'])
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -113,6 +115,28 @@ class Fun(commands.Cog):
                 await ctx.send(embed=embed)
                 await conn.close()
 
+    @commands.command()
+    async def chat(self, ctx, *, arg=None):
+        if arg is None:
+            embed = objectfile.failembed("You need a message!",
+                                         "Example: compass!chat How's your day?",
+                                         "Try it again!")
+            await ctx.send(embed=embed)
+        else:
+            chatbot = await cleverbot.ask(arg)
+            embed = discord.Embed(color=0x202225, title=chatbot,
+                                  description="Keep going with;\n"
+                                              f"{ctx.prefix}chat example")
+            await ctx.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.channel.id == 783704808225505281:
+            chatbot = await cleverbot.ask(message)
+            embed = discord.Embed(color=0x202225, title=chatbot,
+                                  description=f"You can use c+chat [argument] if you want.")
+            await message.channel.send(embed=embed)
+
     @commands.command(pass_context=True, name='eat')
     async def eat(self, ctx):
         current_time = ctx.message.created_at
@@ -199,7 +223,8 @@ class Fun(commands.Cog):
         except asyncio.TimeoutError:
             return
         else:
-            color = discord.Colour.from_rgb(int(moment0.content.lower()[0]))
+            rgb = list(moment0.content.lower()[0].split(' '))
+            color = discord.Colour.from_rgb(int(rgb[0]), int(rgb[1]), int(rgb[2]))
         await ctx.send("What do you want the title to be?")
         try:
             bruh_moment = await self.bot.wait_for('message', timeout=180, check=lambda msg:
@@ -340,17 +365,6 @@ class Fun(commands.Cog):
     # embed = discord.Embed(title=f"War between {ctx.author} and {member}!")
     # embed.add_field(name=)
 
-    async def classify(self, mph):
-        global classification
-        if mph > 0:
-            classification = "Tropical Depression"
-        if mph > 39:
-            classification = "Tropical Storm"
-        if mph > 74:
-            classification = "Hurricane"
-        if mph > 110:
-            classification = "Major Hurricane"
-        return classification
 
     @commands.command(aliases=['generate_season'])
     async def generateseason(self, ctx):
@@ -395,21 +409,28 @@ class Fun(commands.Cog):
             mph = random.choice(acceptable)
             kph = round(mph / 1.151)
             if mph < 39:
-                tropical_cyclones += (f"{await self.classify(mph)} {tropical_depression_list[tropical_depressions]}, with {mph} mph winds ({kph} kph winds)\n")
+                tropical_cyclones += (f"{await objectfile.classify(mph)} {tropical_depression_list[tropical_depressions]}, with {mph} mph winds ({kph} kph winds)\n")
                 tropical_depressions += 1
             else:
-                tropical_cyclones += (f"{await self.classify(mph)} {hurricane_list_combined[tropical_storms]}, with {mph} mph winds ({kph} kph winds)\n")
+                tropical_cyclones += (f"{await objectfile.classify(mph)} {hurricane_list_combined[tropical_storms]}, with {mph} mph winds ({kph} kph winds)\n")
                 tropical_depressions += 1
                 tropical_storms += 1
             if mph > 74:
                 hurricanes += 1
             if mph > 110:
                 major_hurricanes += 1
-        await ctx.send(str(f"Depressions: {tropical_depressions}\n"
-                           f"Storms: {tropical_storms}\n"
-                           f"Hurricanes: {hurricanes}\n"
-                           f"Major Hurricanes: {major_hurricanes}\n"
-                           f"{tropical_cyclones}"))
+        stats = str(f"Depressions: {tropical_depressions}\n"
+                    f"Storms: {tropical_storms}\n"
+                    f"Hurricanes: {hurricanes}\n"
+                    f"Major Hurricanes: {major_hurricanes}\n")
+        embed = objectfile.twoembed("2020 Atlantic Hurricane Season",
+                                    tropical_cyclones)
+        objectfile.add_field(embed, "Statistics", stats, True)
+        easter_egg = random.randint(0, 100)
+        if easter_egg == 100:
+            objectfile.add_field(embed, "Other Systems", f"Storm Alex, with 116 mph winds ({round(116 / 1.151)} kph winds)", True)
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Fun(bot))
