@@ -451,10 +451,10 @@ class Fun(commands.Cog):
         try:
             await ctx.send(embed=embed)
         except discord.errors.HTTPException:
-            pasteurl = await mystbin_client.post(f"```{str(year).replace('None', str(list_of_years[0]))} Atlantic Hurricane Season```\n\n\n"
+            pasteurl = await mystbin_client.post(f"**__{str(year).replace('None', str(list_of_years[0]))} Atlantic Hurricane Season__**\n\n\n"
                                                  f"{tropical_cyclones}\n\n\n"
                                                  f"``Statistics```\n"
-                                                 f"{stats}", syntax="markdown")
+                                                 f"**__{stats}__**", syntax="markdown")
             embed = objectfile.twoembed(f"{str(year).replace('None', str(list_of_years[0]))} Atlantic Hurricane Season",
                                         f"Output was too long so I put it on [mystb.in.](https://mystb.in/)\n"
                                         f"Check it out [**here!**]({pasteurl})")

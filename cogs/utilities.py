@@ -6,10 +6,12 @@ import sqlite3
 import typing
 import time
 import re
+import inspect
 import platform
 import psutil
 import asyncio
 import pkg_resources
+import os
 from objectfile import valids as valids
 from datetime import datetime
 from discord.ext import commands
@@ -342,6 +344,34 @@ class Utilities(commands.Cog):
         if second % 10 == 0:
             await message.edit(embed=await self.timer(second))
 
+    @commands.command()
+    async def source(self, ctx, *, command:str=None):
+        # This command was mostly ripped from R-Danny (but not all of it.)
+        # This is allowed under mozilla license.
+        url = "https://github.com/Compass-Bot-Team/Compass"
+        branch = "main"
+        if command is None:
+            return await ctx.send(embed=objectfile.twoembed("My source!",
+                                                            url))
+        else:
+            if command == 'help':
+                src = type(self.bot.help_command)
+                module = src.__module__
+                filename = inspect.getsourcefile(src)
+            else:
+                obj = self.bot.get_command(command.replace('.', ' '))
+                if obj is None:
+                    return await ctx.send(url)
+                src = obj.callback.__code__
+                module = obj.callback.__module__
+                filename = src.co_filename
+        lines, firstlineno = inspect.getsourcelines(src)
+        if not module.startswith('discord'):
+            location = os.path.relpath(filename).replace('\\', '/')
+        else:
+            location = module.replace('.', '/') + '.py'
+        await ctx.send(embed=objectfile.twoembed(f"Source for {command}!",
+                                                 f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'))
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
