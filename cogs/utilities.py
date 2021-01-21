@@ -361,7 +361,8 @@ class Utilities(commands.Cog):
             else:
                 obj = self.bot.get_command(command.replace('.', ' '))
                 if obj is None:
-                    return await ctx.send(url)
+                    return await ctx.send(embed=objectfile.twoembed("My source!",
+                                                                    url))
                 src = obj.callback.__code__
                 module = obj.callback.__module__
                 filename = src.co_filename
