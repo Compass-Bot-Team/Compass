@@ -365,11 +365,30 @@ class Fun(commands.Cog):
     # embed = discord.Embed(title=f"War between {ctx.author} and {member}!")
     # embed.add_field(name=)
 
-
     @commands.command(aliases=['generate_season'])
-    async def generateseason(self, ctx):
+    async def generateseason(self, ctx, year: int = None):
+        list_of_years = [2021, 2022, 2023, 2024, 2025, 2026]
+        used_hurricane_list = []
+        if year is None:
+             used_hurricane_list = objectfile._2021hurricanelist
+        else:
+            if year == 2021:
+                used_hurricane_list = objectfile._2021hurricanelist
+            if year == 2022:
+                used_hurricane_list = objectfile._2022hurricanelist
+            if year == 2023:
+                used_hurricane_list = objectfile._2023hurricanelist
+            if year == 2024:
+                used_hurricane_list = objectfile._2024hurricanelist
+            if year == 2025:
+                used_hurricane_list = objectfile._2025hurricanelist
+            if year == 2026:
+                used_hurricane_list = objectfile._2026hurricanelist
+            if year not in list_of_years:
+                return await ctx.send(embed=objectfile.newfailembed("Please provide a valid year!",
+                                                                    "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"))
         tropical_depression_list = objectfile.numbers
-        hurricane_list_combined = objectfile.twentytwentyhurricanelist + objectfile.greekhurricanelist
+        hurricane_list_combined = used_hurricane_list + objectfile.greekhurricanelist
         tropical_depressions = 0
         tropical_storms = 0
         hurricanes = 0
@@ -423,14 +442,27 @@ class Fun(commands.Cog):
                     f"Storms: {tropical_storms}\n"
                     f"Hurricanes: {hurricanes}\n"
                     f"Major Hurricanes: {major_hurricanes}\n")
-        embed = objectfile.twoembed("2020 Atlantic Hurricane Season",
+        embed = objectfile.twoembed(f"{str(year).replace('None', str(list_of_years[0]))} Atlantic Hurricane Season",
                                     tropical_cyclones)
         objectfile.add_field(embed, "Statistics", stats, True)
         easter_egg = random.randint(0, 100)
         if easter_egg == 100:
             objectfile.add_field(embed, "Other Systems", f"Storm Alex, with 116 mph winds ({round(116 / 1.151)} kph winds)", True)
-        await ctx.send(embed=embed)
-
+        try:
+            await ctx.send(embed=embed)
+        except discord.errors.HTTPException:
+            pasteurl = await mystbin_client.post(f"```{str(year).replace('None', str(list_of_years[0]))} Atlantic Hurricane Season```\n\n\n"
+                                                 f"{tropical_cyclones}\n\n\n"
+                                                 f"``Statistics```\n"
+                                                 f"{stats}", syntax="markdown")
+            embed = objectfile.twoembed(f"{str(year).replace('None', str(list_of_years[0]))} Atlantic Hurricane Season",
+                                        f"Output was too long so I put it on [mystb.in.](https://mystb.in/)\n"
+                                        f"Check it out [**here!**]({pasteurl})")
+            objectfile.add_field(embed, "Statistics", stats, True)
+            if easter_egg == 100:
+                objectfile.add_field(embed, "Other Systems",
+                                     f"Storm Alex, with 116 mph winds ({round(116 / 1.151)} kph winds)", True)
+            await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Fun(bot))
