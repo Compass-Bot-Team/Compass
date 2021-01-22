@@ -129,14 +129,6 @@ class Fun(commands.Cog):
                                               f"{ctx.prefix}chat example")
             await ctx.send(embed=embed)
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.channel.id == 783704808225505281:
-            chatbot = await cleverbot.ask(message)
-            embed = discord.Embed(color=0x202225, title=chatbot,
-                                  description=f"You can use c+chat [argument] if you want.")
-            await message.channel.send(embed=embed)
-
     @commands.command(pass_context=True, name='eat')
     async def eat(self, ctx):
         current_time = ctx.message.created_at
@@ -367,8 +359,8 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=['generate_season'])
     async def generateseason(self, ctx, year: int = None):
+        global used_hurricane_list
         list_of_years = [2021, 2022, 2023, 2024, 2025, 2026]
-        used_hurricane_list = []
         if year is None:
              used_hurricane_list = objectfile._2021hurricanelist
         else:
@@ -404,26 +396,22 @@ class Fun(commands.Cog):
             if chance > 0:
                 acceptable = [30, 35, 40, 45, 50]
             if chance > 20:
-                acceptable = [30, 35, 40, 45, 50, 60, 65]
+                acceptable = [35, 40, 45, 50, 60, 65]
             if chance > 30:
-                acceptable = [30, 35, 50, 45, 50, 60, 65, 70]
+                acceptable = [40, 45, 50, 60, 65, 70]
             if chance > 50:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75]
+                acceptable = [45, 50, 60, 65, 70, 75]
             if chance > 60:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100]
+                acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100]
             if chance > 70:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115]
+                acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 125, 130, 140]
             if chance > 80:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
-                              145, 150]
+                acceptable = [60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155, 160]
             if chance > 90:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
-                              145, 150, 155, 160]
-            if chance > 95:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                acceptable = [80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
                               145, 150, 155, 160, 165, 175, 180]
-            if chance > 99:
-                acceptable = [30, 35, 40, 45, 50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+            if chance > 95:
+                acceptable = [90, 100, 105, 110, 115, 120, 125, 130, 140,
                               145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
             mph = random.choice(acceptable)
             kph = round(mph / 1.151)

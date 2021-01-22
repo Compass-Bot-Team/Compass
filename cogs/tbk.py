@@ -7,7 +7,10 @@ from discord.ext import commands
 
 def in_tbk():
     def predicate(ctx):
-        return ctx.guild.id == 703420768360595456
+        if ctx.guild.id == 703420768360595456:
+            return True
+        else:
+            return False
     return commands.check(predicate)
 
 class TBK(commands.Cog, name='TBK Commands'):
@@ -15,28 +18,23 @@ class TBK(commands.Cog, name='TBK Commands'):
         self.bot = bot
         self.tbk = bot.get_guild(703420768360595456)
 
-    async def timer(self, second):
-        if second == 0:
-            embed = objectfile.newfailembed(f"TBK is deleted.",
-                                            "oh shit")
-        else:
-            embed = objectfile.newfailembed(f"TBK is deleted in {second}.",
-                                            "oh shit")
-        await asyncio.sleep(1)
-        return embed
-
     @in_tbk()
     @commands.command(aliases=['tbk_deletion_timer'])
     async def tbkdeletiontimer(self, ctx):
-        second = 10
-        message = await ctx.send(embed=await self.timer(second))
-        second -= 1
-        for _ in range(10):
-            await message.edit(embed=await self.timer(second))
-            second -= 1
+        embed1 = objectfile.newfailembed(f"TBK will be deleted in 10.",
+                                         "oh shit")
+        embed2 = objectfile.newfailembed(f"TBK will be deleted in 5.",
+                                         "oh shit")
+        embed3 = objectfile.newfailembed(f"TBK is deleted.",
+                                         "oh shit")
+        message = await ctx.send(embed=embed1)
+        async with ctx.channel.typing():
+            await asyncio.sleep(5)
+            await message.edit(embed=embed2)
+            await asyncio.sleep(5)
+            await message.edit(embed=embed3)
 
     @in_tbk()
-    @commands.cooldown(1, 1, commands.BucketType.guild)
     @commands.command(aliases=['tbk_retards'])
     async def tbkretards(self, ctx):
         list_of_retards = []
@@ -46,14 +44,14 @@ class TBK(commands.Cog, name='TBK Commands'):
                 list_of_retards.append(f"<@{str(degen.id)}>")
         list_2 = []
         number = 10
-        for _ in range(10):
+        for _ in range(number):
             retard = random.choice(list_of_retards)
             if retard in list_2:
                 return
             else:
                 list_2.append(retard)
                 number -= 1
-        await ctx.send(embed=objectfile.twoembed("the hit list",
+        await ctx.send(embed=objectfile.twoembed("TBK's most retarded users!",
                                                  str(list_2).replace("'", "").replace("[", "").replace("]", "")))
 
 

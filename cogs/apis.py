@@ -120,32 +120,16 @@ class APIs(commands.Cog):
     @commands.cooldown(1, 5)
     @commands.command()
     async def google(self, ctx, *, arg):
-        class MyMenu(menus.Menu):
-            page = 0
-
-            async def base_embed(self):
-                results = await engine.search(f"{arg}")
-                embed = discord.Embed(colour=discord.Colour.from_rgb(122, 141, 207), title=results[0].title,
-                                      description=results[self.page].snippet)
-                embed.add_field(name="URL", value=results[self.page].link, inline=True)
-                embed.set_image(url=f"{results[self.page].image}")
-                return embed
-
-            async def send_initial_message(self, channel, ctx):
-                return await channel.send(embed=await self.base_embed[int(self.page)])
-
-            @menus.button('\N{LEFTWARDS BLACK ARROW}\U0000fe0f')
-            async def oh_shit_go_back(self, payload):
-                self.page -= 1
-                await self.message.edit(embed=await self.base_embed[self.page])
-
-            @menus.button('\N{BLACK RIGHTWARDS ARROW}\U0000fe0f')
-            async def next_page(self, payload):
-                self.page += 1
-                await self.message.edit(embed=await self.base_embed[self.page])
-
-        m = MyMenu()
-        await m.start(ctx)
+        try:
+            results = await engine.search(f"{arg}")
+            embed = objectfile.twoembed(results[0].title,
+                                        results[0].snippet)
+            embed.add_field(name="URL", value=results[0].link, inline=True)
+            embed.set_image(url=f"{results[0].image}")
+            await ctx.send(embed=embed)
+        except KeyError:
+            await ctx.send(embed=objectfile.newfailembed("No results!",
+                                                         "Try searching something else."))
 
     @commands.command()
     async def cat(self, ctx):
@@ -483,20 +467,6 @@ class APIs(commands.Cog):
             embed = objectfile.imgembed(f"The flag of {country_search.name}!",
                                         f"https://flagpedia.net/data/flags/w702/{country_search.alpha_2.lower()}.png")
             await ctx.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if ctx.command.qualified_name in country_commands:
-            example = f""
-            type = f""
-            if ctx.command in info_or_flag:
-                type += f"country"
-                example += f"Example; compass!{ctx.command} USA"
-            else:
-                type += f"subdivision"
-                example += f"Example; compass!{ctx.command} US-GA"
-                await ctx.send(embed=objectfile.newfailembed(f"Invalid {type} name!",
-                                                             example))
 
     @commands.command(name="encodeinbinary")
     async def _encodeinbinary(self, ctx, *, arg):
