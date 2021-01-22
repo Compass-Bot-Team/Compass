@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+wikipedia = "~=1.4.0"
+validators = "~=0.18.1"
+pynacl = "~=1.4.0"
+pyyaml = "~=5.3.1"
+datetime = "~=4.3"
+psutil = "~=5.8.0"
+pillow = "~=8.1.0"
+aiofiles = "~=0.6.0"
+pycountry = "~=20.7.3"
+pygithub = "~=1.54.1"
+asyncpraw = "~=7.1.0"
+mojangapi = "~=0.0.5"
+asyncio = "~=3.4.3"
+discord = "~=1.0.1"
+pur = "~=5.3.0"
+gtts = "~=2.2.1"
+aiohttp = "~=3.7.3"
+"mystbin.py" = "~=1.0.1"
+async-cleverbot = "~=0.2.2"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
