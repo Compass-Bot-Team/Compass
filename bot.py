@@ -33,8 +33,8 @@ os.environ["JISHAKU_HIDE"] = "True"
 
 def has_admin():
     def predicate(ctx):
-        guild = bot.get_guild(773318789617811526)
-        role = guild.get_role(776253869038501918)
+        guild = bot.get_guild(738530998001860629)
+        role = guild.get_role(793211817174237215)
         if role in ctx.author.roles:
             return True
         else:
@@ -179,14 +179,14 @@ async def status():
     guilds = "{:,}".format((len(list(bot.guilds))))
     members = "{:,}".format(len(bot.users))
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                        name=f"discord.gg/H5cBqhy4RD - {guilds} servers and {members}"
+                                                        name=f"discord.gg/SymdusT - {guilds} servers and {members}"
                                                              f" members!"))
 
 
 @bot.event
 async def on_ready():
     print('Compass is online!')
-    channel = bot.get_channel(777248014460125184)
+    channel = bot.get_channel(801974572244140033)
     embed = discord.Embed(colour=discord.Colour.from_rgb(0, 209, 24),
                           title='The bot is on', description=f"Compass is online!")
     await channel.send(embed=embed)
@@ -199,16 +199,13 @@ async def on_ready():
 @bot.command(aliases=["stop"], hidden=True)
 async def shutdown(ctx):
     author = ctx.message.author
-
     embed = discord.Embed(title="Shutting down...", colour=discord.Colour.from_rgb(211, 0, 0),
                           description=f"Bot shutdown ordered by {author}.")
     await ctx.send(embed=embed)
-
-    channel = bot.get_channel(777248014460125184)
+    channel = bot.get_channel(801974572244140033)
     embed = discord.Embed(title="Bye bye bot.", colour=discord.Colour.from_rgb(211, 0, 0),
                           description=f"Compass is being shutdown by {author}.")
     await channel.send(embed=embed)
-
     await bot.close()
 
 
@@ -236,7 +233,7 @@ async def load_error(ctx, error):
 @bot.command(hidden=True)
 async def unload(ctx, extension):
     bot.unload_extension(f'cogs.{extension}')
-    baselogger.info(f'Unoaded {extension}')
+    baselogger.info(f'Unloaded {extension}')
     author = ctx.message.author
     embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0), title='Cog Unloaded',
                           description=f"Specified cog {extension} unloaded by {author}.")

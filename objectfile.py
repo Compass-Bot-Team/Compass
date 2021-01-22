@@ -1,12 +1,10 @@
 import discord
 import random
-import os
 
 intents = discord.Intents.all()
 intents.messages = True
 intents.members = True
 intents.presences = True
-
 
 async def classify(mph):
     global classification
@@ -310,3 +308,8 @@ def dtog(id):
 
 def embedcolor():
     return 0x202225
+
+async def checkfail(server):
+    checkfail = newfailembed(f"You aren't in {server}!",
+                             "Try harder.")
+    return checkfail
