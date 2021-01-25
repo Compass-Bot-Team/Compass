@@ -34,6 +34,9 @@ ymlconfig = yaml.safe_load(open("config.yml"))
 client = sr_api.Client()
 cleverbot = async_cleverbot.Cleverbot(ymlconfig['travitiakey'])
 support_server_id = 738530998001860629
+log_channel_id = 792924591383117834
+support_channel_id = 801974601294020609
+chatbot_channel_id = 801971149285883955
 checkfail = objectfile.newfailembed("You aren't in AntoLib (or you aren't admin there!)",
                                     "Try harder.")
 
@@ -44,7 +47,10 @@ def antolib():
 
 def blacklisted_or_not():
     def predicate(ctx):
-        return ctx.guild.id == 738530998001860629
+        if ctx.author.id in blacklisted:
+            return False
+        else:
+            return True
     return commands.check(predicate)
 
 class AntoLib(commands.Cog):
@@ -57,7 +63,7 @@ class AntoLib(commands.Cog):
             return
         if message.author.bot:
             return
-        if message.channel.id == 801971149285883955:
+        if message.channel.id == chatbot_channel_id:
             if len(message.content) < 3 or len(message.content) > 60:
                 await message.channel.send(embed=objectfile.newfailembed("All messages must be above 3 and below 60 characters!",
                                                                          "API limitations, sowwy."))
@@ -74,11 +80,11 @@ class AntoLib(commands.Cog):
             return
         embed = discord.Embed(title=f"Message deleted in #{message.channel}!",
                               description=f"Message from <@!{message.author.id}>",
-                              color=discord.Color.from_rgb(122, 141, 207))
+                              colour=0x202225)
         embed.add_field(name="Message", value=message.content)
         embed.set_footer(text=f"{message.created_at}")
         embed.set_thumbnail(url=f"{message.author.avatar_url}")
-        logchannel = self.bot.get_channel(777039726506934273)
+        logchannel = self.bot.get_channel(log_channel_id)
         await logchannel.send(embed=embed)
 
     @commands.Cog.listener()
@@ -90,12 +96,12 @@ class AntoLib(commands.Cog):
             return
         embed = discord.Embed(title=f"Message edited in #{before.channel}!",
                               description=f"Message from <@!{before.author.id}>",
-                              color=discord.Color.from_rgb(122, 141, 207))
+                              colour=0x202225)
         embed.add_field(name="Message Before", value=f"{before.content}", inline=True)
         embed.add_field(name="Message After", value=f"{after.content}", inline=True)
         embed.set_footer(text=f"{datetime.now()}")
         embed.set_thumbnail(url=f"{author.avatar_url}")
-        logchannel = self.bot.get_channel(777039726506934273)
+        logchannel = self.bot.get_channel(log_channel_id)
         await logchannel.send(embed=embed)
 
     @antolib()
@@ -103,7 +109,7 @@ class AntoLib(commands.Cog):
     @commands.command()
     async def verify(self, ctx, member: discord.Member):
         try:
-            logchannel = self.bot.get_channel(777039726506934273)
+            logchannel = self.bot.get_channel(log_channel_id)
             verifiedrole = get(member.guild.roles, name="Member")
             unverifiedrole = get(member.guild.roles, name="Unverified")
             if unverifiedrole in member.roles:
@@ -122,7 +128,14 @@ class AntoLib(commands.Cog):
         except commands.CheckFailure:
             await ctx.send(embed=checkfail)
 
+    @blacklisted_or_not()
     @commands.command()
+    async def support(self, ctx, *, question:str):
+        try:
+            support_channel = self.bot.get_channel(support_channel_id)
+        except Exception:
+            pass
+
 
 def setup(bot):
     bot.add_cog(AntoLib(bot))
