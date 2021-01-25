@@ -30,10 +30,9 @@ import objectfile
 import logging
 import yaml
 import aiohttp
+import aiosqlite
 import asyncio
 from datetime import datetime
-from .music import music_commands
-from .apis import country_commands as countries_country_commands
 from github import Github
 from discord.ext import commands
 
@@ -56,7 +55,7 @@ class Errors(commands.Cog):
         if cog:
             if cog._get_overridden_method(cog.cog_command_error) is not None:
                 return
-        ignored = (commands.CommandNotFound, asyncio.TimeoutError, discord.errors.HTTPException, KeyError)
+        ignored = (commands.CommandNotFound, asyncio.TimeoutError, discord.errors.HTTPException)
         error = getattr(error, 'original', error)
         if isinstance(error, ignored):
             return
@@ -72,7 +71,7 @@ class Errors(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             num = math.ceil(error.retry_after)
             seconds = num
-            minutes = round(num /  60)
+            minutes = round(num / 60)
             total = "{:,} seconds ({:,} minutes).".format(seconds, minutes)
             await ctx.send(embed=objectfile.failembed(f"This command is on cooldown!",
                                                       f"Try again in {total}",

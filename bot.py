@@ -26,17 +26,23 @@ import os
 import yaml
 import logging
 import json
-import subprocess
 from datetime import datetime
 from pur import update_requirements
 from discord.ext import commands, tasks
 
 async def get_prefix(bot, message):
     if message.guild is None:
-        return commands.when_mentioned_or(str("c+"))(bot, message)
+        return commands.when_mentioned_or(str("c!"))(bot, message)
     else:
         with open("databases/prefixes.json", "r") as f:
             servers = json.load(f)
+            if str(servers[str(message.guild.id)]['prefix']) is None:
+                servers[str(message.guild.id)] = {}
+                servers[str(message.guild.id)]["prefix"] = "c!"
+                with open("databases/prefixes.json", "w") as f:
+                    json.dump(servers, f)
+            else:
+                pass
         return commands.when_mentioned_or(str(servers[str(message.guild.id)]["prefix"]))(bot, message)
 
 
@@ -48,6 +54,7 @@ bot.owner_ids = config["owners"]
 bot.snipe = {}
 bot.editsnipe = {}
 bot.launch_time = datetime.utcnow()
+blacklisted = []
 logging.basicConfig(format=f"[{datetime.utcnow()} %(name)s %(levelname)s] %(message)s", level=logging.INFO)
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
@@ -57,6 +64,9 @@ def has_admin():
     def predicate(ctx):
         guild = bot.get_guild(738530998001860629)
         role = guild.get_role(793211817174237215)
+        list_of_ids = []
+        for member in role.members:
+            list_of_ids.append(member.id)
         if role in ctx.author.roles:
             return True
         else:
@@ -274,7 +284,7 @@ async def unload_error(ctx, error):
 @commands.is_owner()
 @bot.command(hidden=True)
 async def restartallcogs(ctx):
-    for filename in os.listdir('./cogs'):
+    for filename in os.listdir('cogs'):
         if filename.endswith('.py'):
             bot.reload_extension(f'cogs.{filename[:-3]}')
     baselogger.info("Restarted all cogs")
@@ -352,7 +362,7 @@ class MyHelp(commands.HelpCommand):
 
 bot.help_command = MyHelp()
 
-for filename in os.listdir('./cogs'):
+for filename in os.listdir('cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
         baselogger.info(f"Loading cog cogs.{filename[:-3]}")

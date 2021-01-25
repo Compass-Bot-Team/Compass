@@ -25,7 +25,7 @@ import objectfile
 import sr_api
 import async_cleverbot
 import yaml
-from bot import has_admin
+from bot import has_admin, blacklisted
 from datetime import datetime
 from discord.ext import commands
 from discord.utils import get
@@ -38,6 +38,11 @@ checkfail = objectfile.newfailembed("You aren't in AntoLib (or you aren't admin 
                                     "Try harder.")
 
 def antolib():
+    def predicate(ctx):
+        return ctx.guild.id == 738530998001860629
+    return commands.check(predicate)
+
+def blacklisted_or_not():
     def predicate(ctx):
         return ctx.guild.id == 738530998001860629
     return commands.check(predicate)
@@ -116,6 +121,8 @@ class AntoLib(commands.Cog):
                                                           f"Verified Member: {member}"))
         except commands.CheckFailure:
             await ctx.send(embed=checkfail)
+
+    @commands.command()
 
 def setup(bot):
     bot.add_cog(AntoLib(bot))

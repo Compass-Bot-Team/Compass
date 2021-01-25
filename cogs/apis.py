@@ -1,7 +1,3 @@
-import discord
-import objectfile
-import sr_api
-import yaml
 # MIT License
 #
 # Copyright (c) 2021 Compass
@@ -23,28 +19,49 @@ import yaml
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+#
+import discord
+import objectfile
+import sr_api
+import yaml
 import pycountry
 from MojangAPI import Client
 import cse
 import random
 import aiohttp
 import asyncpraw
-from discord.ext import commands, menus
+from discord.ext import commands
 
 config = yaml.safe_load(open("config.yml"))
 client = sr_api.Client(config['srakey'])
 reddit = asyncpraw.Reddit(client_id=config['redditauth'][1], client_secret=config['redditauth'][0],
                           password=config['password'], user_agent=config['redditauth'][2],
-                          username="Sovietica") # Change username
+                          username="Sovietica")
 engine = cse.Search(config['googleapikey'])
 info_or_flag = ['country info', 'country flag', 'country stats']
 country_commands = ['country info', 'country flag', 'country subdivision', 'country stats']
 
-
 class APIs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.cooldown(1, 5)
+    @commands.command()
+    async def google(self, ctx, *, arg):
+        try:
+            results = await engine.search(f"{arg}")
+            if results[0].snippet is not None:
+                snippet = str(results[0].snippet)
+            if results[0].snippet is None:
+                snippet = "No snippet available."
+            embed = objectfile.twoembed(results[0].title,
+                                        snippet)
+            embed.add_field(name="URL", value=results[0].link, inline=True)
+            embed.set_image(url=f"{results[0].image}")
+            await ctx.send(embed=embed)
+        except KeyError:
+            await ctx.send(embed=objectfile.newfailembed("No results!",
+                                                         "Try searching something else."))
 
     @commands.command()
     async def priorityqueue(self, ctx):
@@ -138,20 +155,6 @@ class APIs(commands.Cog):
                 embed.add_field(name="Player Count",
                                 value="{:,}".format(int(stats['games'][game_name.upper()]['players'])))
                 await ctx.send(embed=embed)
-
-    @commands.cooldown(1, 5)
-    @commands.command()
-    async def google(self, ctx, *, arg):
-        try:
-            results = await engine.search(f"{arg}")
-            embed = objectfile.twoembed(results[0].title,
-                                        results[0].snippet)
-            embed.add_field(name="URL", value=results[0].link, inline=True)
-            embed.set_image(url=f"{results[0].image}")
-            await ctx.send(embed=embed)
-        except KeyError:
-            await ctx.send(embed=objectfile.newfailembed("No results!",
-                                                         "Try searching something else."))
 
     @commands.command()
     async def cat(self, ctx):

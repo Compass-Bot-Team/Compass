@@ -21,3 +21,4 @@ git+https://github.com/DontTreadOnGerman/Wavelink.git
 git+https://github.com/iDutchy/sr_api.git
 git+https://github.com/Rapptz/discord-ext-menus.git
 git+https://github.com/Compass-Bot-Team/python-cse.git
+aiosqlite~=0.16.1

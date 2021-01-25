@@ -23,8 +23,6 @@
 import discord
 import objectfile
 import datetime
-import validators
-import sqlite3
 import typing
 import time
 import re
@@ -34,7 +32,6 @@ import psutil
 import asyncio
 import pkg_resources
 import os
-from objectfile import valids as valids
 from datetime import datetime
 from discord.ext import commands
 
@@ -121,108 +118,6 @@ class Utilities(commands.Cog):
                              f"Join the support server [here!](https://discord.gg/H5cBqhy4RD)", False)
         embed.set_footer(text=f"Made in discord.py {pkg_resources.get_distribution('discord.py').version}!")
         await ctx.send(embed=embed)
-
-    @commands.command()
-    async def addquote(self, ctx, *, args):
-        message_success = objectfile.successembed("Quote added",
-                                                  "You can now pull your quote.",
-                                                  "People can be inspired by you!")
-        message_error = objectfile.failembed("Nope!",
-                                             "You don't have perms.",
-                                             "Contact <@721029142602056328> for access to this command.")
-        readfile = open("databases/quotes.txt", "r")
-        if args in readfile.read():
-            await ctx.send(embed=objectfile.failembed("This quote is already in the database....",
-                                                      "Change it up or something.",
-                                                      "Or it won't be added!"))
-        else:
-            if ctx.message.author.id in valids:
-                write = open("databases/quotes.txt", "a")
-                write.write(f"\n{args} |{ctx.author}")
-                write.close()
-                await ctx.send(embed=message_success)
-            else:
-                await ctx.send(embed=message_error)
-        readfile.close()
-
-    @commands.command()
-    async def addmeme(self, ctx, *, args):
-        message_success = objectfile.successembed("Quote added",
-                                                  "You can now pull your meme.",
-                                                  "People can... laugh at you?")
-        message_error = objectfile.failembed("Nope!",
-                                             "You don't have perms, or it's not a link (hence unlaughable.)",
-                                             "Contact <@721029142602056328> for access to this command.")
-        db = sqlite3.connect('databases/memes.db')
-        c = db.cursor()
-        data = c.fetchall()
-        if args in data:
-            await ctx.send(embed=objectfile.failembed("This meme is already in the database....",
-                                                      "Change it up or something.",
-                                                      "Or it won't be added!"))
-            db.close()
-        else:
-            if ctx.message.author.id in objectfile.memevalids and validators.url(args):
-                conn = sqlite3.connect('databases/memes.db')
-                c = conn.cursor()
-                c.execute(f"INSERT INTO Memes VALUES ('{args}')")
-                conn.commit()
-                conn.close()
-                await ctx.send(embed=message_success)
-            else:
-                await ctx.send(embed=message_error)
-
-    @commands.command(name="add8ballresponse")
-    async def _add8ballresponse(self, ctx, *, args):
-        message_success = objectfile.successembed("8ball response added",
-                                                  "You can now pull your response.",
-                                                  "Just try it!")
-        message_error = objectfile.failembed("Nope!",
-                                             "You don't have perms.",
-                                             "Contact <@721029142602056328> for access to this command.")
-        db = sqlite3.connect('databases/8ballresponses.db')
-        c = db.cursor()
-        data = c.fetchall()
-        if args in data:
-            await ctx.send(embed=objectfile.failembed("This response is already in the database....",
-                                                      "Change it up or something.",
-                                                      "Or it won't be added!"))
-        else:
-            if ctx.message.author.id in valids:
-                conn = sqlite3.connect('databases/8ballresponses.db')
-                c = conn.cursor()
-                c.execute(f"INSERT INTO ballresponses VALUES ('{args}')")
-                conn.commit()
-                conn.close()
-                await ctx.send(embed=message_success)
-            else:
-                await ctx.send(embed=message_error)
-
-    @commands.command(name="addeatresponse")
-    async def addeatresponse(self, ctx, *, args):
-        message_success = objectfile.successembed("Eat response added",
-                                                  "You can now eat something.",
-                                                  "Just try it!")
-        message_error = objectfile.failembed("Nope!",
-                                             "You don't have perms.",
-                                             "Contact <@721029142602056328> for access to this command.")
-        db = sqlite3.connect('databases/eatresponses.db')
-        c = db.cursor()
-        data = c.fetchall()
-        if args in data:
-            await ctx.send(embed=objectfile.failembed("This response is already in the database....",
-                                                      "Change it up or something.",
-                                                      "Or it won't be added!"))
-        else:
-            if ctx.message.author.id in valids:
-                conn = sqlite3.connect('databases/eatresponses.db')
-                c = conn.cursor()
-                c.execute(f"INSERT INTO eatresponses VALUES ('{args}')")
-                conn.commit()
-                conn.close()
-                await ctx.send(embed=message_success)
-            else:
-                await ctx.send(embed=message_error)
 
     @commands.command()
     async def amiwhitelisted(self, ctx):

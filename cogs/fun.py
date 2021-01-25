@@ -32,7 +32,6 @@ import typing
 import gtts
 import io
 import async_cleverbot
-from databases import asqlite
 from discord.ext import commands
 
 ymlconfig = yaml.safe_load(open('config.yml'))
@@ -82,24 +81,6 @@ class Fun(commands.Cog):
         current_time = ctx.message.created_at
         await ctx.send(f"__Say command executed!__\n**Message sent by {author}**\n{msg}\n**Time**\n{current_time}")
 
-    @commands.command()
-    async def quote(self, ctx):
-        openfile = open("databases/quotes.txt", "r").readlines()
-        file = random.choice(openfile).split("|")
-        embed = objectfile.twoembed("Your quote!",
-                                    str(f"> {file[0]}"))
-        embed.set_footer(text=str(f"- {file[1]}"))
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def meme(self, ctx):
-        async with asqlite.connect('databases/memes.db') as conn:
-            async with conn.cursor() as c:
-                await c.execute("SELECT * FROM Memes ORDER BY RANDOM() LIMIT 1;")
-                fetchraw = c.fetchone()
-                fetchcalc = str(fetchraw).replace("('", "").replace(")", "").replace("%27,", "").replace("',", "")
-                await ctx.send(f"Your meme!\n{fetchcalc}")
-                await conn.close()
 
     @commands.command()
     async def wikipedia(self, ctx, *, arg):
@@ -123,50 +104,21 @@ class Fun(commands.Cog):
         await ctx.send(embed=objectfile.twoembed(f"{ctx.message.author}, here's someone.",
                                                  str(random.choice(ctx.message.guild.members))))
 
-    @commands.command(name='8ball')
-    async def _8ball(self, ctx):
-        current_time = ctx.message.created_at
-        async with asqlite.connect('databases/8ballresponses.db') as conn:
-            async with conn.cursor() as c:
-                await c.execute("SELECT * FROM 8ballresponses ORDER BY RANDOM() LIMIT 1;")
-                fetch = await c.fetchone()
-                responses = str(fetch)
-                embed = objectfile.twoembed(str(responses),
-                                            f"I don't know if this is a good or bad thing.")
-                embed.set_footer(text=f"{current_time}")
-                await ctx.send(embed=embed)
-                await conn.close()
-
     @commands.command()
-    async def chat(self, ctx, *, arg=None):
+    async def chat(self, ctx, *, arg:str=None):
         if arg is None:
-            embed = objectfile.failembed("You need a message!",
-                                         "Example: compass!chat How's your day?",
-                                         "Try it again!")
+            embed = objectfile.failembed(f"You need a message!",
+                                         f"Example: {ctx.prefix}chat How's your day?",
+                                         f"Try it again!")
             await ctx.send(embed=embed)
         else:
-            chatbot = await cleverbot.ask(arg)
-            embed = discord.Embed(color=0x202225, title=chatbot,
-                                  description="Keep going with;\n"
-                                              f"{ctx.prefix}chat example")
-            await ctx.send(embed=embed)
-
-    @commands.command(pass_context=True, name='eat')
-    async def eat(self, ctx):
-        current_time = ctx.message.created_at
-        async with asqlite.connect('databases/8ballresponses.db') as db:
-            async with db.cursor() as c:
-                await c.execute("SELECT * FROM eatresponses ORDER BY RANDOM() LIMIT 1;")
-                fetchraw = c.fetchone()
-                fetchcalc = str(fetchraw).replace("('", "").replace(")", "").replace("%27,", "").replace("',", "")
-                await ctx.send(embed=objectfile.twoembed("Eating", "NOM"))
-                async with ctx.channel.typing():
-                    await asyncio.sleep(5)
-                    embed = objectfile.twoembed(fetchcalc,
-                                                "NOM")
-                    embed.set_footer(text=f"{current_time}")
-                    await ctx.send(embed=embed)
-                await db.close()
+            if len(arg) < 3 or len(arg) > 60:
+                await ctx.send(embed=objectfile.newfailembed("All messages must be above 3 and below 60 characters!",
+                                                             "API limitations, sowwy."))
+            else:
+                chatbot = await cleverbot.ask(str(arg))
+                embed = objectfile.twoembed(f"Cleverbot's response!", chatbot)
+                await ctx.send(embed=embed)
 
     @commands.command()
     async def screenshot(self, ctx, url):

@@ -57,7 +57,7 @@ else:
 
 if not os.path.exists(db_folder+r"\8ballresponses.db"):
     async def create_8ball_db():
-        async with asqlite.connect(db_folder+r"\8ballresponses.db") as conn:
+        async with asqlite.connect(db_folder + r"\8ballresponses.db") as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute('''CREATE TABLE ballresponses (response)''')
                 await conn.commit()
@@ -68,7 +68,7 @@ else:
 
 if not os.path.exists(db_folder+r"\eatresponses.db"):
     async def create_eatresponses_db():
-        async with asqlite.connect(db_folder+r"\eatresponses.db") as conn:
+        async with asqlite.connect(db_folder + r"\eatresponses.db") as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute('''CREATE TABLE eatresponses (response)''')
                 await conn.commit()
@@ -79,7 +79,7 @@ else:
 
 if not os.path.exists(db_folder+r"\memes.db"):
     async def create_memes_db():
-        async with asqlite.connect(db_folder+r"\memes.db") as conn:
+        async with asqlite.connect(db_folder + r"\memes.db") as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute('''CREATE TABLE Memes (link)''')
                 await conn.commit()
