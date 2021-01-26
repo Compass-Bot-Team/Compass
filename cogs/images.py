@@ -220,15 +220,9 @@ class Images(commands.Cog):
         if url is None:
             if ctx.message.attachments[0] is not None:
                 attachmenturl = ctx.message.attachments[0].url
-                blueifier = client.filter(option="blue", url=attachmenturl)
-                embed = objectfile.twoembed("Your image just turned to blue!",
-                                            f"[URL]({blueifier})")
-                buffer = BytesIO(await blueifier.read())
-                file = discord.File(fp=buffer, filename="blue.png")
-                embed.set_image(url=f"attachment://blue.png")
-                await ctx.send(embed=embed, file=file)
-                return
-        blueifier = client.filter(option="blue", url=url)
+        else:
+            attachmenturl = url
+        blueifier = client.filter(option="blue", url=attachmenturl)
         embed = objectfile.twoembed("Your image just turned to blue!",
                                     f"[URL]({blueifier})")
         buffer = BytesIO(await blueifier.read())

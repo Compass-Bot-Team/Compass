@@ -31,7 +31,9 @@ import mystbin
 import typing
 import gtts
 import io
+import aiosqlite
 import async_cleverbot
+from datetime import datetime
 from discord.ext import commands
 
 ymlconfig = yaml.safe_load(open('config.yml'))
@@ -42,6 +44,95 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.paginator = commands.Paginator()
+        self.bot.snipe = {}
+        self.bot.editsnipe = {}
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        if message.author.bot:
+            return
+        else:
+            embed_var1 = discord.Embed(timestamp=datetime.utcnow(),
+                                       title=f"Message deleted in #{message.channel}",
+                                       description=f"The message author was <@!{message.author.id}>.",
+                                       color=0x202225)
+            embed_var1.add_field(name="Message", value=message.content, inline=False)
+            embed_var1.set_thumbnail(url=message.author.avatar_url)
+            self.bot.snipe[message.channel] = embed_var1
+            if message.guild.id == 773318789617811526:
+                logs = self.bot.get_channel(773318789617811526)
+                await logs.send(embed=embed_var1)
+            return embed_var1
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if before.author.bot:
+            return
+        else:
+            embed_var1 = discord.Embed(timestamp=datetime.utcnow(),
+                                       title=f"Message edited in #{before.channel}",
+                                       description=f"The message author was <@!{before.author.id}>.",
+                                       color=0x202225)
+            embed_var1.add_field(name="Message", value=before.content, inline=False)
+            embed_var1.set_thumbnail(url=before.author.avatar_url)
+            self.bot.editsnipe[before.channel] = embed_var1
+            if before.guild.id != 773318789617811526:
+                return embed_var1
+            else:
+                logs = self.bot.get_channel(773318789617811526)
+                await logs.send(embed=embed_var1)
+                return embed_var1
+
+    @commands.command()
+    async def snipe(self, ctx):
+        if self.bot.snipe == {}:
+            embed = objectfile.twoembed("No logged messages.",
+                                        "Nobody sent any logged (deleted) messages "
+                                        "in this channel!")
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(embed=self.bot.snipe[ctx.channel])
+
+    @snipe.error
+    async def snipe_error(self, error, ctx):
+        if isinstance(error, KeyError):
+            embed = objectfile.twoembed("No logged messages.",
+                                        "Nobody sent any logged (deleted) messages "
+                                        "in this channel!")
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def editsnipe(self, ctx):
+        if self.bot.editsnipe == {}:
+            embed = objectfile.twoembed("No logged messages.",
+                                        "Nobody sent any logged (edited) messages "
+                                        "in this channel!")
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(embed=self.bot.editsnipe[ctx.channel])
+
+    @editsnipe.error
+    async def editsnipe_error(self, error, ctx):
+        if isinstance(error, KeyError):
+            embed = objectfile.twoembed("No logged messages.",
+                                        "Nobody sent any logged (deleted) messages "
+                                        "in this channel!")
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def meme(self, ctx):
+        try:
+            async with aiosqlite.connect('databases/compassdb.db') as db:
+                async with db.execute("SELECT * FROM Memes ORDER BY RANDOM() LIMIT 1;") as cursor:
+                    get_info = await cursor.fetchone()
+                    author = get_info[1]
+                    linkcalc = str(get_info[0]).replace("('", "").replace(")", "").replace("%27,", "").replace("',", "")
+                    await ctx.send(f"Your meme!\nSubmitted by {author}\n\n{linkcalc}")
+        except aiosqlite.Error:
+            async with aiosqlite.connect('databases/compassdb.db') as db:
+                await db.execute('''CREATE TABLE Memes (link, author)''')
+                await db.commit()
+            await ctx.send("No memes in the table, try again later.")
 
     def tts_moment(self, text):
         ret = io.BytesIO()

@@ -128,14 +128,5 @@ class AntoLib(commands.Cog):
         except commands.CheckFailure:
             await ctx.send(embed=checkfail)
 
-    @blacklisted_or_not()
-    @commands.command()
-    async def support(self, ctx, *, question:str):
-        try:
-            support_channel = self.bot.get_channel(support_channel_id)
-        except Exception:
-            pass
-
-
 def setup(bot):
     bot.add_cog(AntoLib(bot))

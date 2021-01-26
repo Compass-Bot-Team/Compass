@@ -29,9 +29,12 @@ import re
 import inspect
 import platform
 import psutil
+import aiosqlite
 import asyncio
 import pkg_resources
 import os
+from bot import has_admin
+from .server import blacklisted_or_not, checkfail
 from datetime import datetime
 from discord.ext import commands
 
@@ -57,6 +60,22 @@ class Utilities(commands.Cog):
     @commands.Cog.listener()
     async def on_command(self, ctx):
         self.bot.command_num += 1
+
+    @has_admin()
+    @commands.command()
+    async def addmeme(self, ctx, *, link:str):
+        try:
+            async with aiosqlite.connect('databases/compassdb.db') as db:
+                await db.execute(f"""INSERT INTO Memes VALUES ("{link}", "{ctx.author.name}#{ctx.author.discriminator}");""")
+                await db.commit()
+                await ctx.send(f"Success!")
+        except aiosqlite.Error:
+            async with aiosqlite.connect('databases/compassdb.db') as db:
+                await db.execute('''CREATE TABLE Memes (link, author)''')
+                await asyncio.sleep(0.1)
+                await db.execute(f"""INSERT INTO Memes VALUES ("{link}", "{ctx.author.name}#{ctx.author.discriminator}");""")
+                await db.commit()
+                await ctx.send(f"Success!")
 
     async def uptime(self):
         delta_uptime = datetime.utcnow() - self.bot.launch_time
@@ -290,6 +309,33 @@ class Utilities(commands.Cog):
             location = module.replace('.', '/') + '.py'
         await ctx.send(embed=objectfile.twoembed(f"Source for {command}!",
                                                  f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'))
+
+    @blacklisted_or_not()
+    @commands.command()
+    async def support(self, ctx, *, question:str):
+        try:
+            support_channel = self.bot.get_channel(support_channel_id)
+            embed = objectfile.twoembed(f"Question from {ctx.author}!",
+                                        question)
+            embed.add_field(name="Channel ID", description=ctx.channel.id, inline=True)
+            embed.add_field(name="Author ID", description=ctx.author.id, inline=True)
+            await support_channel.send(embed=embed)
+            await ctx.send(embed=objectfile.twoembed("Sent to the support team!",
+                                                     "Join the support server at (this link.)[https://discord.gg/SymdusT]"))
+        except commands.CheckFailure:
+            await ctx.send(embed=objectfile.newfailembed("You're blacklisted!",
+                                                         "Behave."))
+
+    @has_admin()
+    @commands.command()
+    async def reply(self, ctx, *, channel:int, author:int, response:str):
+        try:
+            channel_redux = self.bot.get_channel(channel)
+            if channel_redux is None:
+                return await ctx.send("Invalid channel.")
+            await channel_redux.send(f"<@{author}>\n{response}")
+        except commands.CheckFailure:
+            await ctx.send(embed=checkfail)
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
