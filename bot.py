@@ -28,6 +28,7 @@ import logging
 from datetime import datetime
 from pur import update_requirements
 from discord.ext import commands, tasks
+from discord import Embed, Activity, ActivityType
 
 async def get_prefix(bot, message):
     if message.guild is not None and message.guild.id == 336642139381301249:
@@ -68,11 +69,12 @@ async def on_message(message):
     print(str(f"{message.content} by {message.author} in #{message.channel} ({message.channel.id}) at {message.guild}"))
     await bot.process_commands(message)
 
+    
 @tasks.loop(minutes=5)
 async def status():
     guilds = "{:,}".format((len(list(bot.guilds))))
     members = "{:,}".format(len(bot.users))
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+    await bot.change_presence(activity=Activity(type=ActivityType.watching,
                                                         name=f"discord.gg/SymdusT - {guilds} servers and {members}"
                                                              f" members!"))
 
@@ -81,7 +83,7 @@ async def status():
 async def on_ready():
     print('Compass is online!')
     channel = bot.get_channel(801974572244140033)
-    embed = discord.Embed(colour=discord.Colour.from_rgb(0, 209, 24),
+    embed = Embed(colour=discord.Colour.from_rgb(0, 209, 24),
                           title='The bot is on', description=f"Compass is online!")
     await channel.send(embed=embed)
     print(str(bot.guilds))
@@ -93,11 +95,11 @@ async def on_ready():
 @bot.command(aliases=["stop"])
 async def shutdown(ctx):
     author = ctx.message.author
-    embed = discord.Embed(title="Shutting down...", colour=discord.Colour.from_rgb(211, 0, 0),
+    embed = Embed(title="Shutting down...", colour=discord.Colour.from_rgb(211, 0, 0),
                           description=f"Bot shutdown ordered by {author}.")
     await ctx.send(embed=embed)
     channel = bot.get_channel(801974572244140033)
-    embed = discord.Embed(title="Bye bye bot.", colour=discord.Colour.from_rgb(211, 0, 0),
+    embed = Embed(title="Bye bye bot.", colour=discord.Colour.from_rgb(211, 0, 0),
                           description=f"Compass is being shutdown by {author}.")
     await channel.send(embed=embed)
     await bot.close()
@@ -109,7 +111,7 @@ async def load(ctx, extension):
     bot.load_extension(f'cogs.{extension}')
     baselogger.info(f'Loaded {extension}')
     author = ctx.message.author
-    embed = discord.Embed(title="Cog Loaded", description=f"Specified cog {extension} loaded by {author}.",
+    embed = Embed(title="Cog Loaded", description=f"Specified cog {extension} loaded by {author}.",
                           colour=discord.Colour.from_rgb(0, 209, 24))
     await ctx.send(embed=embed)
 
@@ -118,7 +120,7 @@ async def load(ctx, extension):
 async def load_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         author = ctx.message.author
-        embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0), title="Missing a Cog!",
+        embed = Embed(colour=discord.Colour.from_rgb(211, 0, 0), title="Missing a Cog!",
                               description=f"{author}, you must provide a cog to load!", inline=False)
         await ctx.send(embed=embed)
 
@@ -138,7 +140,7 @@ async def unload(ctx, extension):
 async def unload_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         author = ctx.message.author
-        embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0))
+        embed = Embed(colour=discord.Colour.from_rgb(211, 0, 0))
         embed.add_field(name="Missing a Cog!", value=f"{author}, you must provide a cog to unload!", inline=False)
         await ctx.send(embed=embed)
 
@@ -194,7 +196,7 @@ async def restartcog(ctx, extension):
 async def restartcog_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         author = ctx.message.author
-        embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0))
+        embed = Embed(colour=discord.Colour.from_rgb(211, 0, 0))
         embed.add_field(name="Missing a Cog!", value=f"{author}, you must provide a cog to restart!", inline=False)
         await ctx.send(embed=embed)
 
@@ -206,7 +208,7 @@ class MyHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         legitsi = bot.get_user(184145857526890506)
         antonio = bot.get_user(210473676339019776)
-        embed = discord.Embed(title="Help", description=f"{self.clean_prefix} is this server's prefix.\n"
+        embed = Embed(title="Help", description=f"{self.clean_prefix} is this server's prefix.\n"
                                                         f"**__Credits__**\n"
                                                         f"<@{legitsi.id}> ({legitsi.name}#{legitsi.discriminator}) for giving me DHC.\n"
                                                         f"<@{antonio.id}> ({antonio.name}#{antonio.discriminator}) for making the logo.", color=0x202225)
