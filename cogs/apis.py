@@ -30,6 +30,7 @@ import cse
 import random
 import aiohttp
 import asyncpraw
+import io
 from discord.ext import commands
 
 config = yaml.safe_load(open("config.yml"))
@@ -60,6 +61,12 @@ class APIs(commands.Cog):
             embed.set_image(url=f"{results[0].image}")
             await ctx.send(embed=embed)
         except KeyError:
+            await ctx.send(embed=objectfile.newfailembed("No results!",
+                                                         "Try searching something else."))
+
+    @google.error
+    async def google_error(self, ctx, error):
+        if isinstance(error, KeyError):
             await ctx.send(embed=objectfile.newfailembed("No results!",
                                                          "Try searching something else."))
 
@@ -158,26 +165,20 @@ class APIs(commands.Cog):
 
     @commands.command()
     async def cat(self, ctx):
-        # Get image
         image = await client.get_image("cat")
-        await image.save("image.png")
-        # File
-        file = discord.File("image.png", filename="image.png")
-        # Embed
+        buffer = io.BytesIO(await image.read())
+        file = discord.File(fp=buffer, filename="cat.png")
         embed = discord.Embed(color=0x202225, title="Your cat!")
-        embed.set_image(url="attachment://image.png")
+        embed.set_image(url="attachment://cat.png")
         await ctx.send(embed=embed, file=file)
 
     @commands.command()
     async def dog(self, ctx):
-        # Get image
         image = await client.get_image("dog")
-        await image.save("image.png")
-        # File
-        file = discord.File("image.png", filename="image.png")
-        # Embed
+        buffer = io.BytesIO(await image.read())
+        file = discord.File(fp=buffer, filename="dog.png")
         embed = discord.Embed(color=0x202225, title="Your dog!")
-        embed.set_image(url="attachment://image.png")
+        embed.set_image(url="attachment://dog.png")
         await ctx.send(embed=embed, file=file)
 
     @commands.command()
