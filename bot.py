@@ -30,12 +30,14 @@ from pur import update_requirements
 from discord.ext import commands, tasks
 from discord import Embed, Activity, ActivityType
 
+
 async def get_prefix(bot, message):
     if message.guild is not None and message.guild.id == 336642139381301249:
         prefix = "c+"
     else:
         prefix = "c!"
     return commands.when_mentioned_or(str(prefix))(bot, message)
+
 
 baselogger = logging.getLogger(__name__)
 config = yaml.safe_load(open('config.yml'))
@@ -49,6 +51,7 @@ os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
 
+
 def has_admin():
     def predicate(ctx):
         guild = bot.get_guild(738530998001860629)
@@ -60,7 +63,9 @@ def has_admin():
             return True
         else:
             return False
+
     return commands.check(predicate)
+
 
 @bot.event
 async def on_message(message):
@@ -69,14 +74,14 @@ async def on_message(message):
     print(str(f"{message.content} by {message.author} in #{message.channel} ({message.channel.id}) at {message.guild}"))
     await bot.process_commands(message)
 
-    
+
 @tasks.loop(minutes=5)
 async def status():
     guilds = "{:,}".format((len(list(bot.guilds))))
     members = "{:,}".format(len(bot.users))
     await bot.change_presence(activity=Activity(type=ActivityType.watching,
-                                                        name=f"discord.gg/SymdusT - {guilds} servers and {members}"
-                                                             f" members!"))
+                                                name=f"discord.gg/SymdusT - {guilds} servers and {members}"
+                                                     f" members!"))
 
 
 @bot.event
@@ -84,7 +89,7 @@ async def on_ready():
     print('Compass is online!')
     channel = bot.get_channel(801974572244140033)
     embed = Embed(colour=discord.Colour.from_rgb(0, 209, 24),
-                          title='The bot is on', description=f"Compass is online!")
+                  title='The bot is on', description=f"Compass is online!")
     await channel.send(embed=embed)
     print(str(bot.guilds))
     status.start()
@@ -96,11 +101,11 @@ async def on_ready():
 async def shutdown(ctx):
     author = ctx.message.author
     embed = Embed(title="Shutting down...", colour=discord.Colour.from_rgb(211, 0, 0),
-                          description=f"Bot shutdown ordered by {author}.")
+                  description=f"Bot shutdown ordered by {author}.")
     await ctx.send(embed=embed)
     channel = bot.get_channel(801974572244140033)
     embed = Embed(title="Bye bye bot.", colour=discord.Colour.from_rgb(211, 0, 0),
-                          description=f"Compass is being shutdown by {author}.")
+                  description=f"Compass is being shutdown by {author}.")
     await channel.send(embed=embed)
     await bot.close()
 
@@ -112,7 +117,7 @@ async def load(ctx, extension):
     baselogger.info(f'Loaded {extension}')
     author = ctx.message.author
     embed = Embed(title="Cog Loaded", description=f"Specified cog {extension} loaded by {author}.",
-                          colour=discord.Colour.from_rgb(0, 209, 24))
+                  colour=discord.Colour.from_rgb(0, 209, 24))
     await ctx.send(embed=embed)
 
 
@@ -121,7 +126,7 @@ async def load_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         author = ctx.message.author
         embed = Embed(colour=discord.Colour.from_rgb(211, 0, 0), title="Missing a Cog!",
-                              description=f"{author}, you must provide a cog to load!", inline=False)
+                      description=f"{author}, you must provide a cog to load!", inline=False)
         await ctx.send(embed=embed)
 
 
@@ -209,17 +214,21 @@ class MyHelp(commands.HelpCommand):
         legitsi = bot.get_user(184145857526890506)
         antonio = bot.get_user(210473676339019776)
         embed = Embed(title="Help", description=f"{self.clean_prefix} is this server's prefix.\n"
-                                                        f"**__Credits__**\n"
-                                                        f"<@{legitsi.id}> ({legitsi.name}#{legitsi.discriminator}) for giving me DHC.\n"
-                                                        f"<@{antonio.id}> ({antonio.name}#{antonio.discriminator}) for making the logo.", color=0x202225)
+                                                f"**__Credits__**\n"
+                                                f"<@{legitsi.id}> ({legitsi.name}#{legitsi.discriminator}) for giving me DHC.\n"
+                                                f"<@{antonio.id}> ({antonio.name}#{antonio.discriminator}) for making the logo.",
+                      color=0x202225)
         for cog, commands in mapping.items():
             filtered = await self.filter_commands(commands, sort=True)
             command_signatures = [self.get_command_signature(c) for c in filtered]
             if command_signatures:
                 cog_name = getattr(cog, "qualified_name", "Other")
-                embed.add_field(name=cog_name, value=str(command_signatures).replace("[", "").replace("]", "").replace("'", ""), inline=False)
+                embed.add_field(name=cog_name,
+                                value=str(command_signatures).replace("[", "").replace("]", "").replace("'", ""),
+                                inline=False)
         channel = self.get_destination()
         await channel.send(embed=embed)
+
 
 bot.help_command = MyHelp()
 
