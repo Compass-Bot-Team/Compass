@@ -118,13 +118,7 @@ class Images(commands.Cog):
     async def gay(self, ctx, url=None):
         if url is None:
             if ctx.message.attachments[0] is not None:
-                attachmenturl = ctx.message.attachments[0].url
-                gayifier = client.filter(option="gay", url=attachmenturl)
-                embed = objectfile.twoembed("Your gay image!",
-                                            f"[URL]({gayifier})")
-                embed.set_image(url=gayifier.url)
-                await ctx.send(embed=embed)
-                return
+                url = ctx.message.attachments[0].url
         gayifier = client.filter(option="gay", url=url)
         embed = objectfile.twoembed("Your gay image!",
                                     f"[URL]({gayifier})")
@@ -136,15 +130,7 @@ class Images(commands.Cog):
     async def triggered(self, ctx, url=None):
         if url is None:
             if ctx.message.attachments[0] is not None:
-                attachmenturl = ctx.message.attachments[0].url
-                triggerfier = client.filter(option="triggered", url=attachmenturl)
-                embed = objectfile.twoembed("Your image/GIF just got triggered!",
-                                            f"[URL]({triggerfier})")
-                buffer = BytesIO(await triggerfier.read())
-                file = discord.File(fp=buffer, filename="triggered.gif")
-                embed.set_image(url=f"attachment://triggered.gif")
-                await ctx.send(embed=embed, file=file)
-                return
+                url = ctx.message.attachments[0].url
         triggerfier = client.filter(option="triggered", url=url)
         embed = objectfile.twoembed("Your image/GIF just got triggered!",
                                     f"[URL]({triggerfier})")
@@ -156,13 +142,10 @@ class Images(commands.Cog):
     @commands.cooldown(1, 5)
     @commands.command()
     async def spin(self, ctx, url=None):
-        attachmenturl = ""
         if url is None:
             if ctx.message.attachments[0] is not None:
-                attachmenturl += ctx.message.attachments[0].url
-        else:
-            attachmenturl += url
-        spinner = client.filter(option="spin", url=attachmenturl)
+                url = ctx.message.attachments[0].url
+        spinner = client.filter(option="spin", url=url)
         embed = objectfile.twoembed("Your image/GIF just got spun!",
                                     f"[URL]({spinner})")
         buffer = BytesIO(await spinner.read())
@@ -175,15 +158,7 @@ class Images(commands.Cog):
     async def red(self, ctx, url=None):
         if url is None:
             if ctx.message.attachments[0] is not None:
-                attachmenturl = ctx.message.attachments[0].url
-                redifier = client.filter(option="red", url=attachmenturl)
-                embed = objectfile.twoembed("Your image just turned to red!",
-                                            f"[URL]({redifier})")
-                buffer = BytesIO(await redifier.read())
-                file = discord.File(fp=buffer, filename="red.png")
-                embed.set_image(url=f"attachment://red.png")
-                await ctx.send(embed=embed, file=file)
-                return
+                url = ctx.message.attachments[0].url
         redifier = client.filter(option="red", url=url)
         embed = objectfile.twoembed("Your image just turned to red!",
                                     f"[URL]({redifier})")
@@ -197,15 +172,7 @@ class Images(commands.Cog):
     async def green(self, ctx, url=None):
         if url is None:
             if ctx.message.attachments[0] is not None:
-                attachmenturl = ctx.message.attachments[0].url
-                greenifier = client.filter(option="green", url=attachmenturl)
-                embed = objectfile.twoembed("Your image just turned to green!",
-                                            f"[URL]({greenifier})")
-                buffer = BytesIO(await greenifier.read())
-                file = discord.File(fp=buffer, filename="green.png")
-                embed.set_image(url=f"attachment://green.png")
-                await ctx.send(embed=embed, file=file)
-                return
+                url = ctx.message.attachments[0].url
         greenifier = client.filter(option="green", url=url)
         embed = objectfile.twoembed("Your image just turned to green!",
                                     f"[URL]({greenifier})")
@@ -219,10 +186,8 @@ class Images(commands.Cog):
     async def blue(self, ctx, url=None):
         if url is None:
             if ctx.message.attachments[0] is not None:
-                attachmenturl = ctx.message.attachments[0].url
-        else:
-            attachmenturl = url
-        blueifier = client.filter(option="blue", url=attachmenturl)
+                url = ctx.message.attachments[0].url
+        blueifier = client.filter(option="blue", url=url)
         embed = objectfile.twoembed("Your image just turned to blue!",
                                     f"[URL]({blueifier})")
         buffer = BytesIO(await blueifier.read())
