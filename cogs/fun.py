@@ -452,41 +452,22 @@ class Fun(commands.Cog):
         major_hurricanes = 0
         la_nina_or_el_nino = random.choice(['La Nina', 'El Nino'])
         if la_nina_or_el_nino == 'La Nina':
-            hurricane_amount = random.randint(5, 37)
+            hurricane_amount = random.randint(5, 36)
         if la_nina_or_el_nino == 'El Nino':
             hurricane_amount = random.randint(2, 13)
         tropical_cyclones = ""
         for _ in range(hurricane_amount):
             chance = random.randint(1, 100)
-            if chance > 0:
-                acceptable = [30, 35, 40, 45, 50]
-            if chance > 20:
-                acceptable = [35, 40, 45, 50, 60, 65]
-            if chance > 30:
-                acceptable = [40, 45, 50, 60, 65, 70]
-            if chance > 50:
-                acceptable = [45, 50, 60, 65, 70, 75]
-            if chance > 60:
-                acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100]
-            if chance > 70:
-                acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 125, 130, 140]
-            if chance > 80:
-                acceptable = [60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155, 160]
-            if chance > 90:
-                acceptable = [80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
-                              145, 150, 155, 160, 165, 175, 180]
-            if chance > 95:
-                acceptable = [90, 100, 105, 110, 115, 120, 125, 130, 140,
-                              145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
-            mph = random.choice(acceptable)
+            mph = random.choice(await objectfile.acceptable(chance))
             kph = round(mph / 1.151)
             if mph < 39:
-                tropical_cyclones += (f"{await objectfile.classify(mph)} {tropical_depression_list[tropical_depressions]}, with {mph} mph winds ({kph} kph winds)\n")
+                name = tropical_depression_list[tropical_depressions]
                 tropical_depressions += 1
             else:
-                tropical_cyclones += (f"{await objectfile.classify(mph)} {hurricane_list_combined[tropical_storms]}, with {mph} mph winds ({kph} kph winds)\n")
+                name = hurricane_list_combined[tropical_storms]
                 tropical_depressions += 1
                 tropical_storms += 1
+            tropical_cyclones += (f"{await objectfile.classify(mph)} {name}, with {mph} mph winds ({kph} kph winds)\n")
             if mph > 74:
                 hurricanes += 1
             if mph > 110:
