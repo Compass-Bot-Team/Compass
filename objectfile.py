@@ -23,6 +23,29 @@
 import discord
 import random
 
+async def acceptable(chance):
+    if chance > 0:
+        acceptable = [30, 35, 40, 45, 50]
+    if chance > 20:
+        acceptable = [35, 40, 45, 50, 60, 65]
+    if chance > 30:
+        acceptable = [40, 45, 50, 60, 65, 70]
+    if chance > 50:
+        acceptable = [45, 50, 60, 65, 70, 75]
+    if chance > 60:
+        acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100]
+    if chance > 70:
+        acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 125, 130, 140]
+    if chance > 80:
+        acceptable = [60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155, 160]
+    if chance > 90:
+        acceptable = [80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                      145, 150, 155, 160, 165, 175, 180]
+    if chance > 95:
+        acceptable = [90, 100, 105, 110, 115, 120, 125, 130, 140,
+                      145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
+    return acceptable
+
 intents = discord.Intents.all()
 intents.messages = True
 intents.members = True

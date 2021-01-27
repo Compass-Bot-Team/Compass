@@ -50,6 +50,13 @@ class TimeConverter(commands.Converter):
             time += time_dict[k]*float(v)
             return time
 
+class Bot(commands.Converter):
+    async def convert(self, ctx, bot: typing.Union[discord.User, discord.Member]):
+        user = await ctx.bot.fetch_user(bot.id)
+        if not user.bot:
+            return None
+        return user
+
 class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
