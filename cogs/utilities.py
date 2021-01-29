@@ -25,7 +25,6 @@ import objectfile
 import datetime
 import typing
 import time
-import re
 import inspect
 import platform
 import psutil
@@ -34,21 +33,14 @@ import asyncio
 import pkg_resources
 import os
 from bot import has_admin
-from .server import blacklisted_or_not, checkfail
+from .server import blacklisted_or_not
 from datetime import datetime
 from discord.ext import commands
 
-time_regex = re.compile("(?:(\d{1,5})(h|s|m|d))+?")
-time_dict = {"h":3600, "s":1, "m":60, "d":86400}
+checkfail = objectfile.newfailembed("You aren't a bot admin!",
+                                    "Try harder.")
 
-class TimeConverter(commands.Converter):
-    async def convert(self, ctx, argument):
-        args = argument.lower()
-        matches = re.findall(time_regex, args)
-        time = 0
-        for v, k in matches:
-            time += time_dict[k]*float(v)
-            return time
+support_channel_id = 803375502433189888
 
 class Bot(commands.Converter):
     async def convert(self, ctx, bot: typing.Union[discord.User, discord.Member]):
@@ -72,15 +64,31 @@ class Utilities(commands.Cog):
     @commands.command()
     async def addmeme(self, ctx, *, link:str):
         try:
-            async with aiosqlite.connect('databases/compassdb.db') as db:
+            async with aiosqlite.connect('compassdb.db') as db:
                 await db.execute(f"""INSERT INTO Memes VALUES ("{link}", "{ctx.author.name}#{ctx.author.discriminator}");""")
                 await db.commit()
                 await ctx.send(f"Success!")
         except aiosqlite.Error:
-            async with aiosqlite.connect('databases/compassdb.db') as db:
+            async with aiosqlite.connect('compassdb.db') as db:
                 await db.execute('''CREATE TABLE Memes (link, author)''')
                 await asyncio.sleep(0.1)
                 await db.execute(f"""INSERT INTO Memes VALUES ("{link}", "{ctx.author.name}#{ctx.author.discriminator}");""")
+                await db.commit()
+                await ctx.send(f"Success!")
+
+    @has_admin()
+    @commands.command()
+    async def addquote(self, ctx, *, quote:str):
+        try:
+            async with aiosqlite.connect('compassdb.db') as db:
+                await db.execute(f"""INSERT INTO Quotes VALUES ("{quote}", "{ctx.author.name}#{ctx.author.discriminator}");""")
+                await db.commit()
+                await ctx.send(f"Success!")
+        except aiosqlite.Error:
+            async with aiosqlite.connect('compassdb.db') as db:
+                await db.execute('''CREATE TABLE Quotes (quote, author)''')
+                await asyncio.sleep(0.1)
+                await db.execute(f"""INSERT INTO Quotes VALUES ("{quote}", "{ctx.author.name}#{ctx.author.discriminator}");""")
                 await db.commit()
                 await ctx.send(f"Success!")
 
@@ -100,25 +108,30 @@ class Utilities(commands.Cog):
             uptime_total.append(f"{seconds} seconds")
         return str(uptime_total).replace("[", "").replace("]", "").replace("'", "")
 
+    async def typing_speed(self, ctx):
+        start1 = time.perf_counter()
+        async with ctx.channel.typing():
+            pass
+        end1 = time.perf_counter()
+        return f"{round((end1 - start1) * 1000)}ms"
+
+    async def db_speed(self):
+        start2 = time.perf_counter()
+        await aiosqlite.connect('compassdb.db')
+        end2 = time.perf_counter()
+        return f"{round((end2 - start2) * 1000)}ms"
+
     @commands.command()
     async def ping(self, ctx):
         start = time.perf_counter()
         message = await ctx.send(embed=objectfile.twoembed("Pinging...",
                                                            "Sit tight!"))
         end = time.perf_counter()
-        start1 = time.perf_counter()
-        async with ctx.channel.typing():
-            pass
-        end1 = time.perf_counter()
-        duration = round((end - start) * 1000)
-        typing = round((end1 - start1) * 1000)
-        api_latency = round(self.bot.latency * 1000)
-        embed = discord.Embed(colour=0x202225, title="Pong!")
-        embed.add_field(name="Messages", value=str(duration) + "ms", inline=True)
-        embed.add_field(name="Typing", value=str(typing) + "ms")
-        embed.add_field(name="API latency", value=str(api_latency) + "ms", inline=True)
+        embed = discord.Embed(colour=0x202225, title="Pong!", description=str(round((end - start) * 1000)) + "ms")
+        embed.add_field(name="Websocket", value=str(round(self.bot.latency * 1000)) + "ms", inline=True)
+        embed.add_field(name="Typing", value=await self.typing_speed(ctx), inline=True)
+        embed.add_field(name="Database (Aiosqlite)", value=await self.db_speed(), inline=True)
         await message.edit(embed=embed)
-        return
 
     @commands.command(aliases=["stats", "analytics"])
     async def about(self, ctx):
@@ -324,23 +337,22 @@ class Utilities(commands.Cog):
             support_channel = self.bot.get_channel(support_channel_id)
             embed = objectfile.twoembed(f"Question from {ctx.author}!",
                                         question)
-            embed.add_field(name="Channel ID", description=ctx.channel.id, inline=True)
-            embed.add_field(name="Author ID", description=ctx.author.id, inline=True)
+            embed.add_field(name="Channel ID", value=ctx.channel.id, inline=True)
+            embed.add_field(name="Author ID", value=ctx.author.id, inline=True)
             await support_channel.send(embed=embed)
             await ctx.send(embed=objectfile.twoembed("Sent to the support team!",
-                                                     "Join the support server at (this link.)[https://discord.gg/SymdusT]"))
+                                                     "Join the support server at [this link.](https://discord.gg/SymdusT)"))
         except commands.CheckFailure:
             await ctx.send(embed=objectfile.newfailembed("You're blacklisted!",
                                                          "Behave."))
 
     @has_admin()
     @commands.command()
-    async def reply(self, ctx, *, channel:int, author:int, response:str):
+    async def reply(self, ctx, channel:int, author:int, *, response:str):
         try:
             channel_redux = self.bot.get_channel(channel)
-            if channel_redux is None:
-                return await ctx.send("Invalid channel.")
-            await channel_redux.send(f"<@{author}>\n{response}")
+            await ctx.send("Success!")
+            await channel_redux.send(f"<@{author}>", embed=objectfile.twoembed(f"Response from {ctx.author}!",response))
         except commands.CheckFailure:
             await ctx.send(embed=checkfail)
 
