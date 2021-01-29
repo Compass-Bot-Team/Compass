@@ -122,17 +122,33 @@ class Fun(commands.Cog):
     @commands.command()
     async def meme(self, ctx):
         try:
-            async with aiosqlite.connect('databases/compassdb.db') as db:
+            async with aiosqlite.connect('compassdb.db') as db:
                 async with db.execute("SELECT * FROM Memes ORDER BY RANDOM() LIMIT 1;") as cursor:
                     get_info = await cursor.fetchone()
                     author = get_info[1]
                     linkcalc = str(get_info[0]).replace("('", "").replace(")", "").replace("%27,", "").replace("',", "")
                     await ctx.send(f"Your meme!\nSubmitted by {author}\n\n{linkcalc}")
         except aiosqlite.Error:
-            async with aiosqlite.connect('databases/compassdb.db') as db:
+            async with aiosqlite.connect('compassdb.db') as db:
                 await db.execute('''CREATE TABLE Memes (link, author)''')
                 await db.commit()
             await ctx.send("No memes in the table, try again later.")
+
+    @commands.command()
+    async def quote(self, ctx):
+        try:
+            async with aiosqlite.connect('compassdb.db') as db:
+                async with db.execute("SELECT * FROM Quotes ORDER BY RANDOM() LIMIT 1;") as cursor:
+                    get_info = await cursor.fetchone()
+                    author = get_info[1]
+                    quote = get_info[0]
+                    await ctx.send(f"> {quote}\n"
+                                   f"  - {author}")
+        except aiosqlite.Error:
+            async with aiosqlite.connect('compassdb.db') as db:
+                await db.execute('''CREATE TABLE Quotes (quote, author)''')
+                await db.commit()
+            await ctx.send("No quotes in the table, try again later.")
 
     def tts_moment(self, text):
         ret = io.BytesIO()
@@ -333,37 +349,32 @@ class Fun(commands.Cog):
                                                  str(pasteurl)))
 
     @commands.command()
-    async def ship(self, ctx, user1: typing.Union[discord.Member, discord.User] = None):
-        if user1 is None:
+    async def ship(self, ctx, user: typing.Union[discord.Member, discord.User] = None):
+        if user is None:
             funny_list = []
             for m in ctx.guild.members:
                 if m is not m.bot:
                     funny_list.append(m)
-            member = random.choice(funny_list)
-        else:
-            member = user1
-            if member.bot:
-                embed = objectfile.mainembed(f"{ctx.author}'s chances with {member}!",
-                                             f"100%",
-                                             f"Robot sex toys ARE BASED.")
-                embed.set_thumbnail(url=member.avatar_url)
-                await ctx.send(embed=embed)
-                return
-        if member is ctx.author:
-            embed = objectfile.mainembed(f"{ctx.author}'s chances with {member}!",
+            user = random.choice(funny_list)
+        if user.bot:
+            embed = objectfile.mainembed(f"{ctx.author}'s chances with {user}!",
+                                         f"100%",
+                                         f"Robot sex toys ARE BASED.")
+            embed.set_thumbnail(url=user.avatar_url)
+            return await ctx.send(embed=embed)
+        if user is ctx.author:
+            embed = objectfile.mainembed(f"{ctx.author}'s chances with {user}!",
                                          f"100%",
                                          f"Fucking yourself is enjoyable.")
-            embed.set_thumbnail(url=member.avatar_url)
-            await ctx.send(embed=embed)
-            return
-        else:
-            number = random.randint(0, 100)
-            desc = await objectfile.ship(number)
-            embed = objectfile.mainembed(f"{ctx.author}'s chances with {member}!",
-                                         f"{number}%",
-                                         desc)
-            embed.set_thumbnail(url=member.avatar_url)
-            await ctx.send(embed=embed)
+            embed.set_thumbnail(url=user.avatar_url)
+            return await ctx.send(embed=embed)
+        number = random.randint(0, 100)
+        desc = await objectfile.ship(number)
+        embed = objectfile.mainembed(f"{ctx.author}'s chances with {user}!",
+                                     f"{number}%",
+                                     desc)
+        embed.set_thumbnail(url=user.avatar_url)
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def coinflip(self, ctx):
@@ -410,17 +421,30 @@ class Fun(commands.Cog):
                                                              f"The AI played: {ai_move}\n"
                                                              f"You played: {human_move}"))
 
-    # @commands.command()
-    # async def war(self, ctx, user: typing.Union[discord.Member, discord.User] = None):
-    # if user is None:
-    #    funny_list = [not m.bot for m in ctx.guild.members]
-    #    member = random.choice(funny_list)
-    # else:
-    #    member = user
-    # author_xp = 100
-    # member_xp = 100
-    # embed = discord.Embed(title=f"War between {ctx.author} and {member}!")
-    # embed.add_field(name=)
+    @commands.command()
+    async def war(self, ctx, user: typing.Union[discord.Member, discord.User] = None):
+        if user is None:
+            user = random.choice([not m.bot for m in ctx.guild.members])
+        author_xp = 100
+        user_xp = 100
+        embed = discord.Embed(title=f"War between {ctx.author} and {user}!")
+        embed.add_field(name=f"{ctx.author}'s XP", value=author_xp, inline=True)
+        embed.add_field(name=f"{user}'s XP", value=user_xp, inline=True)
+        await ctx.send(embed=embed)
+        while author_xp or user_xp > 0:
+            thing = random.choice(["1", "2"])
+            embed = discord.Embed(title=f"War between {ctx.author} and {user}!")
+            if thing == "1":
+                author_new_xp = random.randint(1, 100)
+                embed.add_field(name=f"{ctx.author}'s XP", value=f"{author_xp-author_new_xp} (-{author_new_xp} XP)", inline=True)
+                embed.add_field(name=f"{user}'s XP", value=user_xp, inline=True)
+                author_xp -= author_new_xp
+            if thing == "2":
+                user_new_xp = random.randint(1, 100)
+                embed.add_field(name=f"{ctx.author}'s XP", value=author_xp, inline=True)
+                embed.add_field(name=f"{user}'s XP", value=f"{user_xp-user_new_xp} (-{user_new_xp} XP)", inline=True)
+                user_xp -= user_new_xp
+            await asyncio.sleep(1)
 
     @commands.command(aliases=['generate_season'])
     async def generateseason(self, ctx, year: int = None):
@@ -497,6 +521,15 @@ class Fun(commands.Cog):
                 objectfile.add_field(embed, "Other Systems",
                                      f"Storm Alex, with 116 mph winds ({round(116 / 1.151)} kph winds)", True)
             await ctx.send(embed=embed)
+
+    @commands.command(aliases=['random_string'])
+    async def randomstring(self, ctx, *, input: typing.Union[str] = None):
+        if input is None:
+            input = 'qwertyuiopasdfghjklzxcvbnm1234567890'
+        string_list = ""
+        for _ in range(random.randint(1, len(input))):
+            string_list += str(random.choice(input))
+        await ctx.send(string_list)
 
 def setup(bot):
     bot.add_cog(Fun(bot))
