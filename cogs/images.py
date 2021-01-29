@@ -115,10 +115,12 @@ class Images(commands.Cog):
 
     @commands.cooldown(1, 5)
     @commands.command()
-    async def gay(self, ctx, url=None):
+    async def gay(self, ctx, user: typing.Optional[discord.User, discord.Member], url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
-                url = ctx.message.attachments[0].url
+            if user is not None:
+                url = str(user.avatar_url).replace('.webp', '.png')
+            else:
+                url = str(ctx.message.author.avatar_url).replace('.webp', '.png')
         gayifier = client.filter(option="gay", url=url)
         embed = objectfile.twoembed("Your gay image!",
                                     f"[URL]({gayifier})")
@@ -194,23 +196,6 @@ class Images(commands.Cog):
         file = discord.File(fp=buffer, filename="blue.png")
         embed.set_image(url=f"attachment://blue.png")
         await ctx.send(embed=embed, file=file)
-
-    @commands.cooldown(1, 5)
-    @commands.command()
-    async def amongus(self, ctx, user: typing.Union[discord.User, discord.Member] = None):
-        if user is None:
-            member = ctx.author
-        else:
-            member = user
-        among = client.amongus(username=str(member.display_name), avatar=str(member.avatar_url), impostor=random.choice(
-            [False, True]))
-        buffer = BytesIO(await among.read())
-        file = discord.File(fp=buffer, filename="amongus.gif")
-        embed = objectfile.twoembed(f"{user} was ejected!",
-                                    f"[URL]({among})")
-        embed.set_image(url=f"attachment://amongus.gif")
-        await ctx.send(embed=embed, file=file)
-
 
 def setup(bot):
     bot.add_cog(Images(bot))
