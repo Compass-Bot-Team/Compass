@@ -41,7 +41,7 @@ async def get_prefix(bot, message):
 
 baselogger = logging.getLogger(__name__)
 config = yaml.safe_load(open('config.yml'))
-bot = commands.Bot(command_prefix=get_prefix, intents=objectfile.intents)
+bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all())
 bot.command_num = 0
 bot.owner_ids = config["owners"]
 bot.launch_time = datetime.utcnow()
@@ -65,14 +65,6 @@ def has_admin():
             return False
 
     return commands.check(predicate)
-
-
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    print(str(f"{message.content} by {message.author} in #{message.channel} ({message.channel.id}) at {message.guild}"))
-    await bot.process_commands(message)
 
 
 @tasks.loop(minutes=5)

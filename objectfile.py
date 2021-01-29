@@ -46,11 +46,6 @@ async def acceptable(chance):
                       145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
     return acceptable
 
-intents = discord.Intents.all()
-intents.messages = True
-intents.members = True
-intents.presences = True
-
 async def classify(mph):
     global classification
     if mph > 0:
