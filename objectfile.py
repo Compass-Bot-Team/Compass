@@ -198,7 +198,7 @@ def twoembed(title1, text1):
     return embed_var
 
 def imgembed(title, url):
-    embed_var = discord.Embed(colour=0x202225, title=str(title))
+    embed_var = discord.Embed(colour=0x202225, url=url, title=str(title))
     embed_var.set_image(url=url)
     return embed_var
 
