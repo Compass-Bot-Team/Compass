@@ -115,12 +115,9 @@ class Images(commands.Cog):
 
     @commands.cooldown(1, 5)
     @commands.command()
-    async def gay(self, ctx, user: typing.Optional[discord.User, discord.Member], url=None):
+    async def gay(self, ctx, url=None):
         if url is None:
-            if user is not None:
-                url = str(user.avatar_url).replace('.webp', '.png')
-            else:
-                url = str(ctx.message.author.avatar_url).replace('.webp', '.png')
+            url = str(ctx.message.author.avatar_url).replace('.webp', '.png')
         gayifier = client.filter(option="gay", url=url)
         embed = objectfile.twoembed("Your gay image!",
                                     f"[URL]({gayifier})")

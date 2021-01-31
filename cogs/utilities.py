@@ -111,8 +111,7 @@ class Utilities(commands.Cog):
     async def typing_speed(self, ctx):
         start1 = time.perf_counter()
         async with ctx.channel.typing():
-            pass
-        end1 = time.perf_counter()
+            end1 = time.perf_counter()
         return f"{round((end1 - start1) * 1000)}ms"
 
     async def db_speed(self):
