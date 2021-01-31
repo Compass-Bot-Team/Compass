@@ -59,12 +59,9 @@ class Errors(commands.Cog):
         error = getattr(error, 'original', error)
         if isinstance(error, ignored):
             return
-        if isinstance(error, commands.CheckFailure) and ctx.guild.id != 738530998001860629:
-            await ctx.send(embed=await objectfile.checkfail("AntoLib"))
-            return
-        if isinstance(error, commands.CheckFailure) and ctx.guild.id != 703420768360595456:
-            await ctx.send(embed=await objectfile.checkfail("The Boundless Kingdom"))
-            return
+        if isinstance(error, commands.CheckFailure):
+            return await ctx.send(embed=objectfile.newfailembed(f"Check failed!",
+                                                                error))
         if isinstance(error, commands.NotOwner):
             await ctx.send(embed=objectfile.you_cant_use_this())
             return
@@ -72,16 +69,15 @@ class Errors(commands.Cog):
             num = math.ceil(error.retry_after)
             seconds = num
             minutes = round(num / 60)
-            total = "{:,} seconds ({:,} minutes).".format(seconds, minutes)
-            await ctx.send(embed=objectfile.failembed(f"This command is on cooldown!",
-                                                      f"Try again in {total}",
-                                                      "too fast for me"))
+            total = f"{seconds:,.2f} seconds ({minutes} minutes)."
+            await ctx.send(embed=objectfile.newfailembed(f"Try again in {total}",
+                                                         f"Cool down bro!"))
             return
         if isinstance(error, commands.MissingRequiredArgument):
             author = ctx.message.author
             embed = discord.Embed(colour=discord.Colour.from_rgb(211, 0, 0))
             embed.set_author(name=f"{author}, you don't have a required argument.")
-            embed.add_field(name="You'll need to add something at the end.", value=f"Example: compass!unload help")
+            embed.add_field(name="You'll need to add something at the end.", value=f"Example: {ctx.prefix}unload help")
             return
         if isinstance(error, wikipedia.exceptions.DisambiguationError):
             embed = objectfile.twoembed("That sent you to a disambiguation page.", error)

@@ -25,7 +25,6 @@ import objectfile
 import sr_api
 import yaml
 import pycountry
-from MojangAPI import Client
 import cse
 import random
 import aiohttp
@@ -69,99 +68,6 @@ class APIs(commands.Cog):
         if isinstance(error, KeyError):
             await ctx.send(embed=objectfile.newfailembed("No results!",
                                                          "Try searching something else."))
-
-    @commands.command()
-    async def priorityqueue(self, ctx):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.2b2t.dev/prioq") as q:
-                queueapi = await q.json()
-                embed = discord.Embed(colour=0x202225, title='2b2t Priority Queue Stats')
-                embed.add_field(name='Users In Queue', value=str(queueapi[1]), inline=True)
-                embed.add_field(name='ETA to join 2b2t', value=str(queueapi[2]), inline=True)
-                embed.set_footer(text='Courtesy of https://2b2t.dev | https://api.2b2t.dev/prioq')
-                await ctx.send(embed=embed)
-
-    @commands.command(name="2b2tlastseen")
-    async def lastseen(self, ctx, *, arg):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.2b2t.dev/seen?username={arg}") as l:
-                lastseenapi = await l.json()
-                embed = discord.Embed(colour=0x202225, title=f"{arg} was last seen at...")
-                embed.add_field(name=f'All times in EDT',
-                                value=f"{lastseenapi['seen']}", inline=True)
-                embed.set_footer(text=f'Courtesy of https://2b2t.dev | https://api.2b2t.dev/seen?username={arg}')
-                await ctx.send(embed=embed)
-
-    @commands.command()
-    async def normalqueue(self, ctx):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://2b2t.io/api/queue?last=true") as q:
-                queueapiraw = str(await q.read()).replace("[[", "").replace("]]'", "").split(",")
-                embed = discord.Embed(colour=discord.Colour.from_rgb(122, 141, 207), title="2b2t Normal Queue Stats")
-                embed.add_field(name='Users In Queue', value=queueapiraw[1], inline=True)
-                embed.set_footer(text='Courtesy of https://2b2t.io | https://2b2t.io/api/queue?last=true')
-                await ctx.send(embed=embed)
-
-    @commands.command()
-    async def totalqueue(self, ctx):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.2b2t.dev/prioq") as prioqapi:
-                prioqueueraw = await prioqapi.json()
-            async with cs.get(f"https://2b2t.io/api/queue?last=true") as normalqapi:
-                normalqapiraw = str(await normalqapi.read()).replace("[[", "").replace("]]'", "").split(",")
-            embed = objectfile.twoembed("Total players in the 2b2t queue!",
-                                        int(prioqueueraw[1]) + int(normalqapiraw[1]))
-            embed.set_footer(
-                text='Courtesy of https://api.2b2t.dev/prioq | https://2b2t.io/api/queue?last=true')
-            await ctx.send(embed=embed)
-
-    @commands.command()
-    async def playercount(self, ctx):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.hypixel.net/playerCount?key={config['hypixelapikey']}") as playercountraw:
-                playercount = await playercountraw.json()
-                embed = objectfile.twoembed("Hypixel Player Count",
-                                            "{:,}".format(int(playercount['playerCount'])))
-                embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/en/9/93/HypixelLogo.png")
-                await ctx.send(embed=embed)
-
-    @commands.command()
-    async def watchdog(self, ctx):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.hypixel.net/watchdogstats?key={config['hypixelapikey']}") as watchdogstats:
-                watchdog = await watchdogstats.json()
-                embed = objectfile.twoembed("Hypixel Watchdog Stats",
-                                            "Don't break the rules!")
-                embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/en/9/93/HypixelLogo.png")
-                embed.add_field(name="Bans in the last minute",
-                                value="{:,}".format(int(watchdog['watchdog_lastMinute'])))
-                embed.add_field(name="Staff Rolling Daily", value="{:,}".format(int(watchdog['staff_rollingDaily'])))
-                embed.add_field(name="Watchdog Rolling Daily",
-                                value="{:,}".format(int(watchdog['watchdog_rollingDaily'])))
-                embed.add_field(name="Total Watchdog Bans", value="{:,}".format(int(watchdog['watchdog_total'])))
-                embed.add_field(name="Total Staff Bans", value="{:,}".format(int(watchdog['staff_total'])))
-                await ctx.send(embed=embed)
-
-    @commands.command()
-    async def skin(self, ctx, username):
-        user = await Client.User.createUser(username)
-        profile = await user.getProfile()
-        embed = objectfile.twoembed(f"{username}'s Minecraft skin!",
-                                    "This API hurts.")
-        embed.set_image(url=profile.skin)
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def gamecount(self, ctx, *, game_name):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.hypixel.net/gameCounts?key={config['hypixelapikey']}") as gamecountstats:
-                stats = await gamecountstats.json()
-                embed = objectfile.twoembed(f"Game stats for {game_name}",
-                                            "Stats go brrr!")
-                embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/en/9/93/HypixelLogo.png")
-                embed.add_field(name="Player Count",
-                                value="{:,}".format(int(stats['games'][game_name.upper()]['players'])))
-                await ctx.send(embed=embed)
 
     @commands.command()
     async def cat(self, ctx):
