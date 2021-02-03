@@ -25,10 +25,9 @@ import objectfile
 import sr_api
 import async_cleverbot
 import yaml
-from bot import has_admin, blacklisted
+from bot import blacklisted
 from datetime import datetime
 from discord.ext import commands
-from discord.utils import get
 
 ymlconfig = yaml.safe_load(open("config.yml"))
 client = sr_api.Client()
@@ -103,30 +102,6 @@ class AntoLib(commands.Cog):
         embed.set_thumbnail(url=f"{author.avatar_url}")
         logchannel = self.bot.get_channel(log_channel_id)
         await logchannel.send(embed=embed)
-
-    @antolib()
-    @has_admin()
-    @commands.command()
-    async def verify(self, ctx, member: discord.Member):
-        try:
-            logchannel = self.bot.get_channel(log_channel_id)
-            verifiedrole = get(member.guild.roles, name="Member")
-            unverifiedrole = get(member.guild.roles, name="Unverified")
-            if unverifiedrole in member.roles:
-                await member.add_roles(verifiedrole)
-                await member.remove_roles(unverifiedrole)
-                embed = objectfile.successembed("User verified.",
-                                                f"Verified {member}!",
-                                                f"Action done by {ctx.message.author}")
-                embed.set_thumbnail(url=f"{member.avatar_url}")
-                await ctx.send(embed=embed)
-                await logchannel.send(embed=embed)
-            else:
-                await ctx.send(embed=objectfile.failembed("This user is already verified.",
-                                                          "Get better verification targets ffs",
-                                                          f"Verified Member: {member}"))
-        except commands.CheckFailure:
-            await ctx.send(embed=checkfail)
 
 def setup(bot):
     bot.add_cog(AntoLib(bot))
