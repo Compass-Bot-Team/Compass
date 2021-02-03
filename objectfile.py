@@ -23,6 +23,12 @@
 import discord
 import random
 
+async def iourl(endpoint):
+    return f"https://2b2t.io/api/{endpoint}"
+
+async def devurl(endpoint):
+    return f"https://api.2b2t.dev/{endpoint}"
+
 async def acceptable(chance):
     if chance > 0:
         acceptable = [30, 35, 40, 45, 50]

@@ -42,9 +42,11 @@ async def get_prefix(bot, message):
 baselogger = logging.getLogger(__name__)
 config = yaml.safe_load(open('config.yml'))
 bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all())
-bot.command_num = 0
 bot.owner_ids = config["owners"]
+bot.command_num = 0
 bot.launch_time = datetime.utcnow()
+bot.command_users = {}
+bot.command_guilds = {}
 blacklisted = []
 logging.basicConfig(format=f"[{datetime.utcnow()} %(name)s %(levelname)s] %(message)s", level=logging.INFO)
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
@@ -89,7 +91,7 @@ async def on_ready():
 
 
 @commands.is_owner()
-@bot.command(aliases=["stop"])
+@bot.command(aliases=["stop"], hidden=True)
 async def shutdown(ctx):
     author = ctx.message.author
     embed = Embed(title="Shutting down...", colour=discord.Colour.from_rgb(211, 0, 0),
