@@ -30,10 +30,18 @@ import random
 import aiohttp
 import asyncpraw
 import io
+import asyncpixel
+import aiosqlite
+import time
+from MojangAPI import Client
+from datetime import datetime
 from discord.ext import commands
+from objectfile import iourl, devurl
 
 config = yaml.safe_load(open("config.yml"))
 client = sr_api.Client(config['srakey'])
+hypixel = asyncpixel.Client(config['hypixelapikey'])
+_2b2t_logo = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/2b2t_Logo_Vectorised.svg/1200px-2b2t_Logo_Vectorised.svg.png"
 reddit = asyncpraw.Reddit(client_id=config['redditauth'][1], client_secret=config['redditauth'][0],
                           password=config['password'], user_agent=config['redditauth'][2],
                           username="Sovietica")
@@ -44,6 +52,112 @@ country_commands = ['country info', 'country flag', 'country subdivision', 'coun
 class APIs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.group(invoke_without_command=True)
+    async def minecraft(self, ctx, *, server: str):
+        start = time.perf_counter()
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get(f'https://eu.mc-api.net/v3/server/ping/{server}') as x:
+                    api = await x.json()
+        if 'error' in api:
+            return await ctx.send(embed=objectfile.newfailembed(f"No Minecraft server IP matching: {server}!",
+                                                                f"Try something else."))
+        end = time.perf_counter()
+        embed = discord.Embed(colour=0x202225, title=f"{server}'s stats!", description=f"Total Players: {api['players']['online']}/{api['players']['max']}")
+        embed.add_field(name="Version", value=api['version']['name'], inline=True)
+        embed.add_field(name="Online", value=str(api['online']).title(), inline=True)
+        embed.add_field(name="Ping time", value=f"{round((end - start) * 1000)}ms", inline=True)
+        embed.set_thumbnail(url=str(api['favicon']))
+        await ctx.send(embed=embed)
+
+    @minecraft.command()
+    async def skin(self, ctx, username: str):
+        async with ctx.channel.typing():
+            user = await Client.User.createUser(username)
+            profile = await user.getProfile()
+        await ctx.send(embed=objectfile.imgembed(f"{username}'s Minecraft skin!", profile.skin))
+
+    @commands.group(name='2b2t', invoke_without_command=True)
+    async def _2b2t(self, ctx):
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get(await iourl("queue?last=true")) as o:
+                    api1 = list(await o.json())[0]
+                async with cs.get(await devurl("status")) as p:
+                    api2 = list(await p.json())[0]
+                async with cs.get(await devurl("prioq")) as q:
+                    api3 = list(await q.json())
+        totalqueue = int(api1[1]) + int(api3[1])
+        embed = discord.Embed(colour=0x202225, title=f"2b2t stats!")
+        embed.add_field(name="Total Queue", value=str(totalqueue))
+        embed.add_field(name="Uptime", value=api2[3])
+        embed.add_field(name="TPS", value=api2[0])
+        embed.set_thumbnail(url=_2b2t_logo)
+        await ctx.send(embed=embed)
+
+    @_2b2t.command(aliases=['user_stats'])
+    async def userstats(self, ctx, user: str):
+        global name
+        name = user
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get(await devurl(f"stats?username={user}")) as l:
+                    api = list(await l.json())[0]
+        embed = discord.Embed(colour=0x202225, title=f"{user}'s stats!", description=f"Admin Level: {api['adminlevel']}/1, "
+                                                                                     f"UUID: {api['uuid']}")
+        kills = api['kills']
+        deaths = api['deaths']
+        embed.add_field(name="Kills", value=kills, inline=True)
+        embed.add_field(name="Kill to Death Ratio", value=int(kills)/int(deaths), inline=True)
+        embed.add_field(name="Deaths", value=deaths, inline=True)
+        embed.add_field(name="Joins", value=api['joins'], inline=True)
+        embed.add_field(name="Leaves", value=api['leaves'], inline=True)
+        embed.add_field(name="DB ID", value=api['id'], inline=True)
+        await ctx.send(embed=embed)
+
+    @userstats.error
+    async def userstats_error(self, ctx, error):
+        return await ctx.send(embed=objectfile.newfailembed(f"No user going by {name}.",
+                                                            "Try searching somebody else."))
+
+    @_2b2t.command(aliases=['last_death'])
+    async def lastdeath(self, ctx, user: str):
+        global name1
+        name1 = user
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get(await devurl(f"stats?lastdeath={user}")) as l:
+                    api = list(await l.json())[0]
+        embed = discord.Embed(colour=0x202225, title=f"{user}'s last death!")
+        embed.add_field(name="Message", value=api['message'], inline=True)
+        embed.add_field(name="Time", value=api['date'] + " " + api['time'], inline=True)
+        embed.add_field(name="DB ID", value=api['id'], inline=True)
+        await ctx.send(embed=embed)
+
+    @lastdeath.error
+    async def lastdeath_error(self, ctx, error):
+        return await ctx.send(embed=objectfile.newfailembed(f"No user going by {name1}.",
+                                                            "Try searching somebody else."))
+
+    @_2b2t.command(aliases=['last_kill'])
+    async def lastkill(self, ctx, user: str):
+        global name2
+        name2 = user
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get(await devurl(f"stats?lastkill={user}")) as l:
+                    api = list(await l.json())[0]
+        embed = discord.Embed(colour=0x202225, title=f"{user}'s last death!")
+        embed.add_field(name="Message", value=api['message'], inline=True)
+        embed.add_field(name="Time", value=api['date'] + " " + api['time'], inline=True)
+        embed.add_field(name="DB ID", value=api['id'], inline=True)
+        await ctx.send(embed=embed)
+
+    @lastkill.error
+    async def lastkill_error(self, ctx, error):
+        return await ctx.send(embed=objectfile.newfailembed(f"No user going by {name2}.",
+                                                            "Try searching somebody else."))
 
     @commands.cooldown(1, 5)
     @commands.command()
@@ -203,28 +317,53 @@ class APIs(commands.Cog):
                 embed.add_field(name="Classifiers", value=res['info']['classifiers'], inline=True)
                 await ctx.send(embed=embed)
 
-    @commands.command()
-    async def weather(self, ctx, *, arg=None):
-        if arg is None:
-            await ctx.send(embed=objectfile.twoembed("You need to search for something!",
-                                                     "Example: compass!weather Atlanta, GA"))
-        else:
-            async with aiohttp.ClientSession() as cs:
-                async with cs.get(
-                        f"http://api.openweathermap.org/data/2.5/weather?appid={config['weatherapikey']}&q={arg}") as r:
-                    x = await r.json()
-                    if x["cod"] != "404":
-                        embed = objectfile.twoembed(f"{arg}'s weather!",
-                                                    f"{str(x['weather'][0]['description'])}\n"
-                                                    f"Humidity: {x['main']['humidity']}\n"
-                                                    f"Temperature (Celsius): {str(round(x['main']['temp'] - 273.15))}\n"
-                                                    f"Temperature (Fahrenheit): {str(round((round(x['main']['temp'] - 273.15) * 9 / 5) + 32))}\n "
-                                                    f"Pressure: {x['main']['pressure']}\n")
-                        await ctx.send(embed=embed)
-                    else:
-                        await ctx.send(embed=objectfile.twoembed("This place doesn't exist!",
+    @commands.group(invoke_without_command=True)
+    async def weather(self, ctx, *, city=None):
+        if city is None:
+            try:
+                async with aiosqlite.connect('compassdb.db') as db:
+                    city = await db.execute(f"""SELECT location FROM Locations WHERE user = "{ctx.author.id}";""")
+            except aiosqlite.Error:
+                return await ctx.send(embed=objectfile.twoembed("You need to search for something!",
+                                                                "Example: compass!weather Atlanta, GA"))
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(
+                    f"http://api.openweathermap.org/data/2.5/weather?appid={config['weatherapikey']}&q={city}") as r:
+                x = await r.json()
+                if x["cod"] != "404":
+                    embed = objectfile.twoembed(f"{city}'s weather!",
+                                                f"{str(x['weather'][0]['description'])}\n"
+                                                f"Humidity: {x['main']['humidity']}\n"
+                                                f"Temperature (Celsius): {str(round(x['main']['temp'] - 273.15))}\n"
+                                                f"Temperature (Fahrenheit): {str(round((round(x['main']['temp'] - 273.15) * 9 / 5) + 32))}\n "
+                                                f"Pressure: {x['main']['pressure']}\n")
+                    await ctx.send(embed=embed)
+                else:
+                    await ctx.send(embed=objectfile.newfailembed("This place doesn't exist!",
                                                                  "Try searching for something else.\n"
                                                                  "Example: compass!weather Atlanta, GA"))
+
+    @weather.command()
+    async def location(self, ctx, *, location: str = None):
+        if location is None:
+            return await ctx.send(embed=objectfile.twoembed("No location!",
+                                                            "pls give a location"))
+        global city
+        city = location
+        async with aiosqlite.connect('compassdb.db') as db:
+            await db.execute(f"""UPDATE Locations SET location = "{location}" WHERE user = "{ctx.author.id}";""")
+            await db.commit()
+        await ctx.send('Success.')
+
+    @location.error
+    async def location_error(self, ctx, error):
+        if isinstance(error, KeyError):
+            async with aiosqlite.connect('compassdb.db') as db:
+                await db.execute(f"""INSERT INTO Locations VALUES ("{city}", "{ctx.author.id}");""")
+                await db.commit()
+            await ctx.send('Success.')
+        else:
+            raise error
 
     @commands.command()
     async def urban(self, ctx, *, arg):
@@ -401,31 +540,43 @@ class APIs(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(name="encodeinbinary")
-    async def _encodeinbinary(self, ctx, *, arg):
-        text = arg
+    async def _encodeinbinary(self, ctx, *, text):
         binary = await client.encode_binary(text)
         embed = objectfile.twoembed(f"{text} encoded!", binary)
         await ctx.send(embed=embed)
 
     @commands.command(name="decodeinbinary")
-    async def _decodeinbinary(self, ctx, *, arg):
-        binary = arg
+    async def _decodeinbinary(self, ctx, *, binary):
         decodedtext = await client.decode_binary(binary)
         embed = objectfile.twoembed(f"{binary} decoded!", decodedtext)
         await ctx.send(embed=embed)
 
     @commands.command(name="encodeinbase64")
-    async def _encodeinbase64(self, ctx, *, arg):
-        text = arg
+    async def _encodeinbase64(self, ctx, *, text):
         encoded = await client.encode_base64(text)
         embed = objectfile.twoembed(f"{text} encoded!", encoded)
         await ctx.send(embed=embed)
 
     @commands.command(name="decodeinbase64")
-    async def _decodeinbase64(self, ctx, *, arg):
-        text = arg
+    async def _decodeinbase64(self, ctx, *, text):
         decodedtext = await client.decode_base64(text)
         embed = objectfile.twoembed(f"{text} decoded!", decodedtext)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['discord_status'])
+    async def discordstatus(self, ctx):
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get("https://srhpyqt94yxb.statuspage.io/api/v2/incidents.json") as page:
+                json = await page.json()
+        incident = json['incidents'][0]
+        embed = discord.Embed(color=0x202225, url=incident['shortlink'],
+                              title=incident['name'] + " | " + incident['impact'],
+                              description=incident['incident_updates'][0]['body'])
+        embed.add_field(name="Found At", value=incident['created_at'].replace("T", " "), inline=True)
+        embed.add_field(name="Updated At", value=incident['updated_at'].replace("T", " "), inline=True)
+        embed.add_field(name="Resolved At", value=incident['resolved_at'].replace("T", " "), inline=True)
+        embed.add_field(name="Monitoring At", value=incident['monitoring_at'].replace("T", " "), inline=True)
+        embed.add_field(name="ID", value=incident['page_id'].replace("T", " "), inline=True)
         await ctx.send(embed=embed)
 
 
