@@ -57,6 +57,8 @@ class Errors(commands.Cog):
                 return
         ignored = (commands.CommandNotFound, asyncio.TimeoutError, discord.errors.HTTPException)
         error = getattr(error, 'original', error)
+        if ctx.command.qualified_name == "about":
+            return
         if isinstance(error, ignored):
             return
         if isinstance(error, commands.CheckFailure):
