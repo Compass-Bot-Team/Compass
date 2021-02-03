@@ -32,6 +32,7 @@ import aiosqlite
 import asyncio
 import pkg_resources
 import os
+import operator
 from bot import has_admin
 from .server import blacklisted_or_not
 from datetime import datetime
@@ -42,23 +43,24 @@ checkfail = objectfile.newfailembed("You aren't a bot admin!",
 
 support_channel_id = 803375502433189888
 
-class Bot(commands.Converter):
-    async def convert(self, ctx, bot: typing.Union[discord.User, discord.Member]):
-        user = await ctx.bot.fetch_user(bot.id)
-        if not user.bot:
-            return None
-        return user
-
 class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.command_num = bot.command_num
-        self.bot.launch_time = bot.launch_time
         self.process = psutil.Process()
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
         self.bot.command_num += 1
+        member_dictionary = self.bot.command_users
+        if ctx.author.id in member_dictionary:
+            member_dictionary[ctx.author.id] += 1
+        else:
+            member_dictionary[ctx.author.id] = 1
+        guild_dictionary = self.bot.command_guilds
+        if f"{ctx.guild} ({ctx.guild.id})" in guild_dictionary:
+            guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] += 1
+        else:
+            guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] = 1
 
     @has_admin()
     @commands.command()
@@ -67,14 +69,12 @@ class Utilities(commands.Cog):
             async with aiosqlite.connect('compassdb.db') as db:
                 await db.execute(f"""INSERT INTO Memes VALUES ("{link}", "{ctx.author.name}#{ctx.author.discriminator}");""")
                 await db.commit()
-                await ctx.send(f"Success!")
         except aiosqlite.Error:
             async with aiosqlite.connect('compassdb.db') as db:
-                await db.execute('''CREATE TABLE Memes (link, author)''')
-                await asyncio.sleep(0.1)
+                await db.execute(f"""CREATE TABLE Memes (link, author)""")
                 await db.execute(f"""INSERT INTO Memes VALUES ("{link}", "{ctx.author.name}#{ctx.author.discriminator}");""")
                 await db.commit()
-                await ctx.send(f"Success!")
+        await ctx.send(f"Success!")
 
     @has_admin()
     @commands.command()
@@ -141,6 +141,23 @@ class Utilities(commands.Cog):
         servers = "{:,}".format(len(list(self.bot.guilds)))
         users = "{:,}".format(len(self.bot.users))
         command_alt = "{:,}".format(self.bot.command_num)
+        user_leaderboards_raw = f''
+        people = sorted(self.bot.command_users.items(), key=operator.itemgetter(1), reverse=True)
+        for count, (user, commands) in enumerate(people):
+            if count < 3:
+                user_leaderboards_raw += f'#{count + 1} <@{user}> with {commands} commands used\n'
+        user_leaderboards = user_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+        guild_leaderboards_raw = f''
+        _servers = sorted(self.bot.command_guilds.items(), key=operator.itemgetter(1), reverse=True)
+        for count, (guild, commands) in enumerate(_servers):
+            if count < 3:
+                guild_leaderboards_raw += f'#{count + 1} {guild} with {commands} commands used\n'
+        guild_leaderboards = guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+        try:
+            objectfile.add_field(embed, "Member Leaderboards", f"{user_leaderboards}", True)
+            objectfile.add_field(embed, "Server Leaderboards", f"{guild_leaderboards}", True)
+        except Exception:
+            pass
         objectfile.add_field(embed, "Stats", f"Cogs: {len(self.bot.cogs)} ({cogs_list})\n"
                                              f"Servers: {servers}\n"
                                              f"Members: {users}\n"
@@ -197,29 +214,30 @@ class Utilities(commands.Cog):
                 embed.add_field(name=f"Suggestion by {author}",
                                 value=f"{suggestion}\n**Server:** {server}\n**Channel:** {channel}", inline=False)
                 embed.set_footer(text=f"{current_time}")
-                send = await suggestion_chat.send(embed=embed)
+                await suggestion_chat.send(embed=embed)
 
     @commands.command()
     async def user(self, ctx, user: typing.Union[discord.Member, discord.User] = None):
         if user is None:
-            member = ctx.message.author
+            user = ctx.message.author
+        embed = discord.Embed(color=0x202225)
+        if user.display_name == user.name:
+            embed.title = f"{str(user)}"
         else:
-            member = user
-        embed = discord.Embed(color=0x202225,
-                              title=f"{str(member)} ({str(member.display_name)})")
-        embed.set_thumbnail(url=str(member.avatar_url))
-        embed.add_field(name="ID", value=str(member.id), inline=False)
-        embed.add_field(name="Status", value=f"{str(member.status).title()}", inline=False)
-        embed.add_field(name="On Mobile", value=str(member.is_on_mobile()), inline=False)
-        embed.add_field(name="Created At", value=str(member.created_at), inline=True)
-        embed.add_field(name="Joined At", value=str(member.joined_at), inline=True)
+            embed.title = f"{str(user)} ({str(user.display_name)})"
+        embed.set_thumbnail(url=str(user.avatar_url))
+        embed.add_field(name="ID", value=str(user.id), inline=False)
+        embed.add_field(name="Status", value=f"{str(user.status).title()}", inline=False)
+        embed.add_field(name="On Mobile", value=str(user.is_on_mobile()), inline=False)
+        embed.add_field(name="Created At", value=str(user.created_at), inline=True)
+        embed.add_field(name="Joined At", value=str(user.joined_at), inline=True)
         list_of_roles = []
-        for role in member.roles:
+        for role in user.roles:
             if role.name == "@everyone":
                 list_of_roles.append(f"{role.name}")
             else:
                 list_of_roles.append(f"<@&{role.id}>")
-        embed.add_field(name=f"Roles ({len(member.roles)})", value=str(list_of_roles).replace("[", "").replace("]", "").replace("'", ""), inline=False)
+        embed.add_field(name=f"Roles ({len(user.roles)})", value=str(list_of_roles).replace("[", "").replace("]", "").replace("'", ""), inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -354,6 +372,71 @@ class Utilities(commands.Cog):
             await channel_redux.send(f"<@{author}>", embed=objectfile.twoembed(f"Response from {ctx.author}!",response))
         except commands.CheckFailure:
             await ctx.send(embed=checkfail)
+
+    @commands.group(invoke_without_command=True)
+    async def invite(self, ctx, invite: discord.Invite):
+        embed = discord.Embed(colour=0x202225, title=f"Information for {invite}!", description=f"Invite created by {invite.inviter}")
+        embed.set_footer(text=f"Invite created at {invite.created_at}")
+        embed.add_field(name="Invite Uses", value=invite.uses, inline=True)
+        embed.add_field(name="Temporary Membership", value=invite.temporary, inline=True)
+        embed.add_field(name="Revoked", value=invite.revoked, inline=True)
+        embed.add_field(name="Invite Channel", value=f"<#{invite.channel.id}>", inline=True)
+        embed.add_field(name="Invite Server", value=invite.guild.name, inline=True)
+        if invite.max_age is not None:
+            embed.add_field(name="Max Age in seconds", value=invite.max_age, inline=True)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def bot(self, ctx, bot: typing.Union[discord.Member, discord.User]):
+        if bot.bot:
+            embed = objectfile.twoembed(f"Information about {bot}!",
+                                        f"You can invite {bot} by [clicking here.](https://discord.com/api/oauth2/authorize?client_id={bot.id}&permissions=8&scope=bot)")
+            embed.set_thumbnail(url=bot.avatar_url)
+            embed.add_field(name="Bot Permissions", value=f"[{bot.guild_permissions.value}](https://discordapi.com/permissions.html#{bot.guild_permissions.value})", inline=True)
+            async with aiosqlite.connect('compassdb.db') as db:
+                server = await db.execute(f"""SELECT server FROM SupportServers WHERE bot = "{bot.id}";""")
+                grabbed_server = str(await server.fetchone()).replace("('", "").replace(")", "").replace("%27,", "").replace("',", "")
+                embed.add_field(name="Support Server", value=grabbed_server.replace("None", "None (request a support server by joining [here.](https://discord.gg/SymdusT))"), inline=True)
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(embed=objectfile.newfailembed("This user is not a bot!",
+                                                         "Try again later."))
+
+    @has_admin()
+    @commands.command(aliases=['add_bot_server'])
+    async def addbotserver(self, ctx, server: str, bot: typing.Union[discord.User, discord.Member]):
+        if bot.bot:
+            async with aiosqlite.connect('compassdb.db') as db:
+                await db.execute(f"""INSERT INTO SupportServers VALUES ("{server}", "{bot.id}");""")
+                await db.commit()
+            await ctx.send(f"Success!")
+        else:
+            await ctx.send("This is not a bot.")
+
+    @commands.command()
+    async def role(self, ctx, *, role: discord.Role):
+        embed = discord.Embed(colour=0x202225, title=f"Information about {role.name} (ID {role.id}!)")
+        embed.add_field(name="Permissions", value=f"[{role.permissions.value}](https://discordapi.com/permissions.html#{role.permissions.value})", inline=True)
+        embed.add_field(name="Hoisted", value=role.hoist, inline=True)
+        embed.add_field(name="Colo(u)r", value=role.colour.value, inline=True)
+        embed.add_field(name="Position", value=f"{role.position}/{len(ctx.guild.roles)}", inline=True)
+        embed.add_field(name="Mentionable", value=role.mentionable, inline=True)
+        embed.add_field(name="Managed by 3rd party", value=role.managed, inline=True)
+        tags = role.tags
+        embed.add_field(name="Tags", value=f"Bot: {tags.bot_id}\n"
+                                           f"Integration ID: {tags.integration_id}\n", inline=True)
+        embed.add_field(name="Is Managed", value=role.is_bot_managed(), inline=True)
+        embed.add_field(name="Is the Boost Role", value=role.is_premium_subscriber(), inline=True)
+        embed.add_field(name="Is an Integration", value=role.is_integration(), inline=True)
+        embed.set_footer(text=f"Role created at {role.created_at}.")
+        members = ""
+        for member in role.members:
+            members += f"<@{member.id}>"
+        try:
+            embed.add_field(name=f"Role Members {len(role.members)}", value=members, inline=False)
+        except discord.errors.HTTPException:
+            embed.add_field(name=f"Role Members {len(role.members)}", value="There was too much to put here.", inline=False)
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
