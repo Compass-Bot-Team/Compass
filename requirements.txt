@@ -17,3 +17,4 @@ git+https://github.com/DontTreadOnGerman/Wavelink.git
 aiosqlite~=0.16.1
 aio2b2t~=1.0
 asyncpixel~=0.2.0
+ipinfo~=4.1.0

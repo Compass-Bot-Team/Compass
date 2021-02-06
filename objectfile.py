@@ -22,6 +22,7 @@
 
 import discord
 import random
+import operator
 
 async def iourl(endpoint):
     return f"https://2b2t.io/api/{endpoint}"
@@ -354,6 +355,38 @@ def dtog(id):
 
 def embedcolor():
     return 0x202225
+
+async def users(bot):
+    user_leaderboards_raw = f''
+    people = sorted(bot.command_users.items(), key=operator.itemgetter(1), reverse=True)
+    for count, (user, commands) in enumerate(people):
+        if count < 3:
+            user_leaderboards_raw += f'#{count + 1} <@{user}> with {commands} commands used\n'
+    return user_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+
+async def guilds(bot):
+    guild_leaderboards_raw = f''
+    _servers = sorted(bot.command_guilds.items(), key=operator.itemgetter(1), reverse=True)
+    for count, (guild, commands) in enumerate(_servers):
+        if count < 3:
+            guild_leaderboards_raw += f'#{count + 1} {guild} with {commands} commands used\n'
+    return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+
+async def noliferusers(bot):
+    no_lifers = sorted(bot.message_senders.items(), key=operator.itemgetter(1), reverse=True)
+    no_lifers_raw = f''
+    for count, (user, messages) in enumerate(no_lifers):
+        if count < 3:
+            no_lifers_raw += f'#{count + 1} <@{user}> with {messages} messages sent\n'
+    return no_lifers_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+
+async def noliferguilds(bot):
+    no_lifers = sorted(bot.guild_senders.items(), key=operator.itemgetter(1), reverse=True)
+    no_lifers_raw = f''
+    for count, (guild, messages) in enumerate(no_lifers):
+        if count < 3:
+            no_lifers_raw += f'#{count + 1} {guild} with {messages} messages sent\n'
+    return no_lifers_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
 
 async def checkfail(server):
     checkfail = newfailembed(f"You aren't in {server}!",

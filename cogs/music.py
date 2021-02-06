@@ -49,7 +49,7 @@ class Music(commands.Cog):
         except Exception:
             return
 
-    @commands.command()
+    @commands.command(help="Connects to the current message author's voice chat.")
     async def connect(self, ctx):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         try:
@@ -60,7 +60,9 @@ class Music(commands.Cog):
             await ctx.send(embed=objectfile.newfailembed("Couldn't connect to a voice channel.",
                                                          "Try joining a voice channel."))
 
-    @commands.command()
+    @commands.command(help="Disconnects from the current message author's voice chat. "
+                           "Only server moderators can use this, but if the message author "
+                           "is on their own, they can use this too!")
     async def disconnect(self, ctx):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if not player.is_connected:
@@ -85,7 +87,7 @@ class Music(commands.Cog):
         return str(time).replace("(", "").replace(")", "").replace(", ", ":")
 
 
-    @commands.command()
+    @commands.command(help="Plays a song.")
     async def play(self, ctx, *, song):
         tracks = await self.bot.wavelink.get_tracks(f'ytsearch:{song}')
         if not tracks:
@@ -102,7 +104,7 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
         await player.play(tracks[0])
 
-    @commands.command()
+    @commands.command(help="Skips a song. Permissions are the same as connect.")
     async def skip(self, ctx):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if not player.is_connected:

@@ -40,7 +40,7 @@ class TBK(commands.Cog, name='TBK Commands'):
         self.tbk = bot.get_guild(703420768360595456)
 
     @in_tbk()
-    @commands.command(aliases=['tbk_deletion_timer'])
+    @commands.command(help="Time before deletion.", aliases=['tbk_deletion_timer'])
     async def tbkdeletiontimer(self, ctx):
         embed1 = objectfile.newfailembed(f"TBK will be deleted in 10.",
                                          "oh shit")
@@ -56,7 +56,7 @@ class TBK(commands.Cog, name='TBK Commands'):
             await message.edit(embed=embed3)
 
     @in_tbk()
-    @commands.command(aliases=['tbk_retards'])
+    @commands.command(help="List of 10 actives on TBK.", aliases=['tbk_retards'])
     async def tbkretards(self, ctx):
         list_of_retards = []
         tbk = self.bot.get_guild(703420768360595456)

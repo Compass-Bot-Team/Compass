@@ -26,7 +26,8 @@ import datetime
 import typing
 import time
 import inspect
-import platform
+import sys
+import humanize
 import psutil
 import aiosqlite
 import asyncio
@@ -47,6 +48,8 @@ class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.process = psutil.Process()
+        self.memory = self.process.memory_full_info()
+        self.version = sys.version_info
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
@@ -57,13 +60,32 @@ class Utilities(commands.Cog):
         else:
             member_dictionary[ctx.author.id] = 1
         guild_dictionary = self.bot.command_guilds
-        if f"{ctx.guild} ({ctx.guild.id})" in guild_dictionary:
-            guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] += 1
+        if ctx.guild is not None:
+            if f"{ctx.guild} ({ctx.guild.id})" not in guild_dictionary:
+                guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] = 1
+            else:
+                guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] += 1
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
         else:
-            guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] = 1
+            other_dictionary = self.bot.guild_senders
+            if message.guild is not None:
+                if message.guild.id not in other_dictionary:
+                    other_dictionary[f"{message.guild} ({message.guild.id})"] = 1
+                else:
+                    other_dictionary[f"{message.guild} ({message.guild.id})"] += 1
+            self.bot.total_messages += 1
+            member_dictionary = self.bot.message_senders
+            if message.author.id in member_dictionary:
+                member_dictionary[message.author.id] += 1
+            else:
+                member_dictionary[message.author.id] = 1
 
     @has_admin()
-    @commands.command()
+    @commands.command(help="Adds a meme to the database of memes. Admin only command.")
     async def addmeme(self, ctx, *, link:str):
         try:
             async with aiosqlite.connect('compassdb.db') as db:
@@ -77,7 +99,7 @@ class Utilities(commands.Cog):
         await ctx.send(f"Success!")
 
     @has_admin()
-    @commands.command()
+    @commands.command(help="Adds a quote to the database of quotes. Admin only command.")
     async def addquote(self, ctx, *, quote:str):
         try:
             async with aiosqlite.connect('compassdb.db') as db:
@@ -120,7 +142,7 @@ class Utilities(commands.Cog):
         end2 = time.perf_counter()
         return f"{round((end2 - start2) * 1000)}ms"
 
-    @commands.command()
+    @commands.command(help="Pong.")
     async def ping(self, ctx):
         start = time.perf_counter()
         message = await ctx.send(embed=objectfile.twoembed("Pinging...",
@@ -132,49 +154,47 @@ class Utilities(commands.Cog):
         embed.add_field(name="Database (Aiosqlite)", value=await self.db_speed(), inline=True)
         await message.edit(embed=embed)
 
-    @commands.command(aliases=["stats", "analytics"])
+    @commands.command(help="Posts some cool analytics.", aliases=["stats", "analytics"])
     async def about(self, ctx):
         cogs_list = str(list(map(str, self.bot.cogs))).replace(']', '').replace('[', '').replace("'", '')
         embed = objectfile.twoembed(f"About",
                                     f"Owner: DTOG#0001 721029142602056328\n"
                                     f"Uptime: {await self.uptime()}\n")
-        servers = "{:,}".format(len(list(self.bot.guilds)))
-        users = "{:,}".format(len(self.bot.users))
-        command_alt = "{:,}".format(self.bot.command_num)
-        user_leaderboards_raw = f''
-        people = sorted(self.bot.command_users.items(), key=operator.itemgetter(1), reverse=True)
-        for count, (user, commands) in enumerate(people):
-            if count < 3:
-                user_leaderboards_raw += f'#{count + 1} <@{user}> with {commands} commands used\n'
-        user_leaderboards = user_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
-        guild_leaderboards_raw = f''
-        _servers = sorted(self.bot.command_guilds.items(), key=operator.itemgetter(1), reverse=True)
-        for count, (guild, commands) in enumerate(_servers):
-            if count < 3:
-                guild_leaderboards_raw += f'#{count + 1} {guild} with {commands} commands used\n'
-        guild_leaderboards = guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
         try:
-            objectfile.add_field(embed, "Member Leaderboards", f"{user_leaderboards}", True)
-            objectfile.add_field(embed, "Server Leaderboards", f"{guild_leaderboards}", True)
+            objectfile.add_field(embed, "Top Bot Users", f"{await objectfile.users(self.bot)}", True)
+            objectfile.add_field(embed, "Top No-Lifers", f"{await objectfile.noliferusers(self.bot)}", True)
+            objectfile.add_field(embed, "Top Guild Bot Users", f"{await objectfile.guilds(self.bot)}", False)
+            objectfile.add_field(embed, "Top Guild No-Lifers", f"{await objectfile.noliferguilds(self.bot)}", False)
         except Exception:
             pass
-        objectfile.add_field(embed, "Stats", f"Cogs: {len(self.bot.cogs)} ({cogs_list})\n"
-                                             f"Servers: {servers}\n"
-                                             f"Members: {users}\n"
-                                             f"Commands: {command_alt}", False)
-        objectfile.add_field(embed, "Operating Stats",
-                             f"Memory Usage: {round(self.process.memory_full_info().uss / 1024 ** 2)}mb\n"
-                             f"CPU Usage: {round(self.process.cpu_percent() / psutil.cpu_count())}%\n"
-                             f"Operating System: {platform.system()}", False)
+        objectfile.add_field(embed, "Stats", f"Cogs: {len(self.bot.cogs):,} ({cogs_list})\n"
+                                             f"Servers: {len(self.bot.guilds):,}\n"
+                                             f"Members: {len(self.bot.users):,}\n"
+                                             f"Total Sent Messages: {self.bot.total_messages:,}\n"
+                                             f"Commands Used Since Restart: {self.bot.command_num:,}", False)
+        embed.add_field(name="Operating Stats",
+                             value=f"Memory Usage: {humanize.naturalsize(self.memory.rss)} physical, {humanize.naturalsize(self.memory.vms)} virtual, {humanize.naturalsize(self.memory.uss)} dedicated to the bot\nCPU Usage: {round(self.process.cpu_percent() / psutil.cpu_count())}%\nOperating System: {sys.platform}", inline=False)
+        embed.set_footer(text=f"Made in discord.py {pkg_resources.get_distribution('discord.py').version} + "
+                              f"Python {self.version.major}.{self.version.minor}.{self.version.micro}!")
         objectfile.add_field(embed, "Links",
                              f"Invite me [here!](https://discord.com/oauth2/authorize?client_id=769308147662979122&permissions=2147352567&scope=bot)\n"
                              f"Go to my GitHub [here!](https://github.com/Compass-Bot-Team/Compass)\n"
                              f"View my website + future dashboard [here!](https://compasswebsite.dev)\n"
                              f"Join the support server [here!](https://discord.gg/H5cBqhy4RD)", False)
-        embed.set_footer(text=f"Made in discord.py {pkg_resources.get_distribution('discord.py').version}!")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['servermessages', 'server_messages', 'guild_messages'], help='Shows the daily messages in the current guild.')
+    async def guildmessages(self, ctx):
+        _dict = self.bot.guild_senders
+        if f"{ctx.guild} ({ctx.guild.id})" not in _dict:
+            _dict[f"{ctx.guild} ({ctx.guild.id})"] = 0
+        guild = f"{ctx.guild} ({ctx.guild.id})"
+        embed = objectfile.twoembed(f"Current standings for {ctx.guild}!",
+                                    f"""{_dict[guild]:,} human messages\n""")
+        embed.set_thumbnail(url=ctx.guild.icon_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Posts the message author's whitelist status.")
     async def amiwhitelisted(self, ctx):
         validusers = objectfile.valids
         whitelistedyes = objectfile.successembed("You're whitelisted!",
@@ -188,7 +208,7 @@ class Utilities(commands.Cog):
         else:
             await ctx.send(embed=whitelistedno)
 
-    @commands.command()
+    @commands.command(help="Posts a suggestion to public voting in the Compass server.")
     async def suggest(self, ctx, *, suggestion=None):
         if ctx.message.author.id in objectfile.blacklistedusers:
             await ctx.send(embed=objectfile.blacklisted)
@@ -216,7 +236,7 @@ class Utilities(commands.Cog):
                 embed.set_footer(text=f"{current_time}")
                 await suggestion_chat.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Shows information about a specified user.")
     async def user(self, ctx, user: typing.Union[discord.Member, discord.User] = None):
         if user is None:
             user = ctx.message.author
@@ -240,7 +260,7 @@ class Utilities(commands.Cog):
         embed.add_field(name=f"Roles ({len(user.roles)})", value=str(list_of_roles).replace("[", "").replace("]", "").replace("'", ""), inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Shows information about the current server.")
     async def server(self, ctx):
         server = ctx.message.guild
         embed = discord.Embed(color=0x202225,
@@ -261,7 +281,7 @@ class Utilities(commands.Cog):
         embed.set_image(url=str(server.banner_url))
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Posts a user's or your avatar.")
     async def avatar(self, ctx, user: discord.User = None):
         if user is None:
             user = ctx.message.author
@@ -270,20 +290,17 @@ class Utilities(commands.Cog):
         embed.set_image(url=f"{user.avatar_url}")
         await ctx.send(embed=embed)
 
-    @commands.group()
+    @commands.group(help="The Compass bot's poll command. You can use poll classic or poll number 1-10.")
     async def poll(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send(embed=objectfile.twoembed("The two sub commands for poll are;",
                                                      f"{ctx.prefix}poll classic or {ctx.prefix}poll number [1-10]!"))
 
-    @poll.command()
+    @poll.command(help="The original poll command.")
     async def classic(self, ctx, *, question=None):
-        base = ""
         if question is None:
-            base += "N/A"
-        else:
-            base += f"{question}"
-        embed = objectfile.mainembed(f"Question asked by {ctx.message.author}!", f"{base}",
+            question = "N/A"
+        embed = objectfile.mainembed(f"Question asked by {ctx.message.author}!", f"{question}",
                                      "<:green_square:779529584201695272> = Yes\n<:yellow_square:779529584201695272> = "
                                      "Neutral\n<:red_square:779529584201695272> = "
                                      "No\n<:purple_square:779530441450848277> = "
@@ -292,7 +309,7 @@ class Utilities(commands.Cog):
         msg = await ctx.send(embed=embed)
         await objectfile.poll_classic(msg)
 
-    @poll.command(name="number")
+    @poll.command(help="A number poll. You can specify a number from 1-10 but it is not required.", name="number")
     async def number(self, ctx, num: int = None):
         await objectfile.number_poll(ctx.message, num)
 
@@ -306,18 +323,16 @@ class Utilities(commands.Cog):
         await asyncio.sleep(1)
         return embed
 
-    @commands.command()
+    @commands.command(help="A timer where you specify the time in seconds. [BROKEN]")
     async def timer(self, ctx, time: int):
         second = time
-        seconds_preserved = time
         message = await ctx.send(embed=await self.timer(second))
-        second += seconds_preserved
-        for _ in range(seconds_preserved):
+        for _ in range(time):
             second -= 1
         if second % 10 == 0:
             await message.edit(embed=await self.timer(second))
 
-    @commands.command()
+    @commands.command(help="Shows the GitHub URL of a command.")
     async def source(self, ctx, *, command:str=None):
         # This command was mostly ripped from R-Danny (but not all of it.)
         # This is allowed under mozilla license.
@@ -348,7 +363,7 @@ class Utilities(commands.Cog):
                                                  f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'))
 
     @blacklisted_or_not()
-    @commands.command()
+    @commands.command(help="Sends a support question to the bot support team.")
     async def support(self, ctx, *, question:str):
         try:
             support_channel = self.bot.get_channel(support_channel_id)
@@ -364,7 +379,7 @@ class Utilities(commands.Cog):
                                                          "Behave."))
 
     @has_admin()
-    @commands.command()
+    @commands.command(help="Replies to a support query. Owner only command.")
     async def reply(self, ctx, channel:int, author:int, *, response:str):
         try:
             channel_redux = self.bot.get_channel(channel)
@@ -373,7 +388,7 @@ class Utilities(commands.Cog):
         except commands.CheckFailure:
             await ctx.send(embed=checkfail)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, help="Shows information about an invite.")
     async def invite(self, ctx, invite: discord.Invite):
         embed = discord.Embed(colour=0x202225, title=f"Information for {invite}!", description=f"Invite created by {invite.inviter}")
         embed.set_footer(text=f"Invite created at {invite.created_at}")
@@ -386,7 +401,7 @@ class Utilities(commands.Cog):
             embed.add_field(name="Max Age in seconds", value=invite.max_age, inline=True)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Shows information about a specified bot.")
     async def bot(self, ctx, bot: typing.Union[discord.Member, discord.User]):
         if bot.bot:
             embed = objectfile.twoembed(f"Information about {bot}!",
@@ -403,7 +418,8 @@ class Utilities(commands.Cog):
                                                          "Try again later."))
 
     @has_admin()
-    @commands.command(aliases=['add_bot_server'])
+    @commands.command(help="Adds a server to the bot server database. "
+                           "Owner only command.", aliases=['add_bot_server'])
     async def addbotserver(self, ctx, server: str, bot: typing.Union[discord.User, discord.Member]):
         if bot.bot:
             async with aiosqlite.connect('compassdb.db') as db:
@@ -413,30 +429,37 @@ class Utilities(commands.Cog):
         else:
             await ctx.send("This is not a bot.")
 
-    @commands.command()
+    @commands.command(help="Shows information about a specified role.")
     async def role(self, ctx, *, role: discord.Role):
+        query = f"""http://www.colourlovers.com/img/{hex(role.colour.value).replace("0x", "")}/100/100/"""
         embed = discord.Embed(colour=0x202225, title=f"Information about {role.name} (ID {role.id}!)")
+        embed.set_thumbnail(url=query.replace("/img/0/100/100/", "/img/8B99A4/100/100/"))
         embed.add_field(name="Permissions", value=f"[{role.permissions.value}](https://discordapi.com/permissions.html#{role.permissions.value})", inline=True)
         embed.add_field(name="Hoisted", value=role.hoist, inline=True)
-        embed.add_field(name="Colo(u)r", value=role.colour.value, inline=True)
         embed.add_field(name="Position", value=f"{role.position}/{len(ctx.guild.roles)}", inline=True)
         embed.add_field(name="Mentionable", value=role.mentionable, inline=True)
         embed.add_field(name="Managed by 3rd party", value=role.managed, inline=True)
-        tags = role.tags
-        embed.add_field(name="Tags", value=f"Bot: {tags.bot_id}\n"
-                                           f"Integration ID: {tags.integration_id}\n", inline=True)
         embed.add_field(name="Is Managed", value=role.is_bot_managed(), inline=True)
         embed.add_field(name="Is the Boost Role", value=role.is_premium_subscriber(), inline=True)
         embed.add_field(name="Is an Integration", value=role.is_integration(), inline=True)
         embed.set_footer(text=f"Role created at {role.created_at}.")
+        member_count = 0
         members = ""
         for member in role.members:
-            members += f"<@{member.id}>"
+            if member_count == 0:
+                members += f"<@{member.id}>"
+            else:
+                members += f", <@{member.id}>"
+            member_count += 1
         try:
-            embed.add_field(name=f"Role Members {len(role.members)}", value=members, inline=False)
+            embed.add_field(name=f"Role Members ({len(role.members)})", value=members, inline=False)
         except discord.errors.HTTPException:
-            embed.add_field(name=f"Role Members {len(role.members)}", value="There was too much to put here.", inline=False)
+            embed.add_field(name=f"Role Members ({len(role.members)})", value="There was too much to put here.", inline=False)
         await ctx.send(embed=embed)
+
+    @role.error
+    async def role_error(self, ctx, error):
+        return await ctx.send("This role doesn't exist!")
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

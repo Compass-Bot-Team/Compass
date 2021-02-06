@@ -25,7 +25,9 @@ import objectfile
 import os
 import yaml
 import logging
-from datetime import datetime
+import asyncio
+import inspect
+import datetime
 from pur import update_requirements
 from discord.ext import commands, tasks
 from discord import Embed, Activity, ActivityType
@@ -44,15 +46,19 @@ config = yaml.safe_load(open('config.yml'))
 bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all())
 bot.owner_ids = config["owners"]
 bot.command_num = 0
-bot.launch_time = datetime.utcnow()
+bot.total_messages = 0
+bot.message_senders = {}
+bot.guild_senders = {}
+bot.guild_senders_actual = {}
+midnight = datetime.time(hour=0)
+bot.launch_time = datetime.datetime.utcnow()
 bot.command_users = {}
 bot.command_guilds = {}
 blacklisted = []
-logging.basicConfig(format=f"[{datetime.utcnow()} %(name)s %(levelname)s] %(message)s", level=logging.INFO)
+logging.basicConfig(format=f"[{datetime.datetime.utcnow()} %(name)s %(levelname)s] %(message)s", level=logging.INFO)
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
-
 
 def has_admin():
     def predicate(ctx):
@@ -91,7 +97,7 @@ async def on_ready():
 
 
 @commands.is_owner()
-@bot.command(aliases=["stop"], hidden=True)
+@bot.command(help="Closes the bot connection. Owner command.", aliases=["stop"], hidden=True)
 async def shutdown(ctx):
     author = ctx.message.author
     embed = Embed(title="Shutting down...", colour=discord.Colour.from_rgb(211, 0, 0),
@@ -105,8 +111,8 @@ async def shutdown(ctx):
 
 
 @commands.is_owner()
-@bot.command()
-async def load(ctx, extension):
+@bot.command(help="Loads a cog. Owner only command.")
+async def load(ctx, *, extension: str):
     bot.load_extension(f'cogs.{extension}')
     baselogger.info(f'Loaded {extension}')
     author = ctx.message.author
@@ -125,8 +131,8 @@ async def load_error(ctx, error):
 
 
 @commands.is_owner()
-@bot.command()
-async def unload(ctx, extension):
+@bot.command(help="Unloads a cog. Owner only command.")
+async def unload(ctx, *, extension: str):
     bot.unload_extension(f'cogs.{extension}')
     baselogger.info(f'Unloaded {extension}')
     author = ctx.message.author
@@ -145,7 +151,7 @@ async def unload_error(ctx, error):
 
 
 @commands.is_owner()
-@bot.command()
+@bot.command(help="Restarts all cogs. Owner only command.")
 async def restartallcogs(ctx):
     for filename in os.listdir('cogs'):
         if filename.endswith('.py'):
@@ -157,32 +163,21 @@ async def restartallcogs(ctx):
 
 
 @commands.is_owner()
-@bot.command(hidden=True)
-async def pull(ctx):
-    await ctx.send("This might take a bit, so be patient.")
-    async with ctx.channel.typing():
-        await ctx.invoke((bot.get_command("jsk").callback)(bot.get_cog("Jishaku"), ctx, argument="git pull"))
-        embed = objectfile.twoembed("Pulled from GitHub.",
-                                    "Pulled from Github and reloaded every cog automatically.")
-        for file in os.listdir("cogs"):
-            if file.endswith(".py"):
-                bot.reload_extension(f"cogs.{file[:-3]}")
-    await ctx.send(embed=embed)
+@bot.command(help="Basically a more efficient version of eval. Owner only command.")
+async def shell(ctx, *, command: str):
+    directory = os.getcwd()
+    proc = await asyncio.create_subprocess_shell(f"cd {directory} & {command}", stdout=asyncio.subprocess.PIPE,
+                                                 stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    if stdout:
+        await ctx.send(f'```py\n[stdout]\n{stdout.decode()}\n```')
+    if stderr:
+        await ctx.send(f'```py\n[stderr]\n{stderr.decode()}\n```')
 
 
 @commands.is_owner()
-@bot.command(hidden=True)
-async def push(ctx, *, arg):
-    async with ctx.channel.typing():
-        await ctx.send("This might take a bit, so be patient.")
-        await ctx.invoke(bot.get_command(f'jsk git commit -a -m "{arg}" && git push'))
-        embed = objectfile.twoembed("Pushed to Github.", "Pushed all changed files to GitHub.")
-        await ctx.send(embed=embed)
-
-
-@commands.is_owner()
-@bot.command()
-async def restartcog(ctx, extension):
+@bot.command(help="Restarts a cog. Owner only command.")
+async def restartcog(ctx, *, extension: str):
     bot.reload_extension(f'cogs.{extension}')
     baselogger.info(f'Specified cog {extension} restarted')
     author = ctx.message.author
@@ -199,8 +194,34 @@ async def restartcog_error(ctx, error):
         embed.add_field(name="Missing a Cog!", value=f"{author}, you must provide a cog to restart!", inline=False)
         await ctx.send(embed=embed)
 
+async def source(command):
+    url = "https://github.com/Compass-Bot-Team/Compass"
+    branch = "main"
+    if command == 'help':
+        src = type(bot.help_command)
+        module = src.__module__
+        filename = inspect.getsourcefile(src)
+    else:
+        obj = bot.get_command(command.replace('.', ' '))
+        src = obj.callback.__code__
+        module = obj.callback.__module__
+        filename = src.co_filename
+    lines, firstlineno = inspect.getsourcelines(src)
+    if not module.startswith('discord'):
+        location = os.path.relpath(filename).replace('\\', '/')
+    else:
+        location = module.replace('.', '/') + '.py'
+    return f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
 class MyHelp(commands.HelpCommand):
+    async def send_command_help(self, command):
+        embed = discord.Embed(title=f"``{command.qualified_name}``", description=command.help, color=0x202225,
+                              url=await source(command.qualified_name))
+        if command.aliases:
+            embed.add_field(name="Aliases", value=", ".join(command.aliases), inline=False)
+        channel = self.get_destination()
+        await channel.send(embed=embed)
+
     def get_command_signature(self, command):
         return f"``{command.qualified_name}``"
 
@@ -231,6 +252,17 @@ for filename in os.listdir('cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
         baselogger.info(f"Loading cog cogs.{filename[:-3]}")
 
+async def cleanse_dict():
+    while True:
+        now = datetime.datetime.utcnow()
+        date = now.date()
+        if now.time() > midnight:
+            date = now.date() + datetime.timedelta(days=1)
+            bot.guild_senders_actual.clear()
+        await discord.utils.sleep_until(datetime.datetime.combine(date, midnight))
+
+
+bot.loop.create_task(cleanse_dict())
 bot.load_extension("jishaku")
 baselogger.info(f"Loading cog jishaku (outside of main folder)")
 bot.run(config['token'])

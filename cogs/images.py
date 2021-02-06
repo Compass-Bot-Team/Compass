@@ -45,10 +45,10 @@ class Images(commands.Cog):
         img = Image.open("image.png")
         img.filter(ImageFilter.GaussianBlur()).save("image.png")
 
-    @commands.command()
+    @commands.command(help="Blurs an image.")
     async def blur(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 await ctx.message.attachments[0].save("image.png")
         else:
             async with aiohttp.ClientSession() as session:
@@ -67,7 +67,7 @@ class Images(commands.Cog):
         img = Image.open("image.png")
         img.rotate(int(degree)).save("image.png")
 
-    @commands.command()
+    @commands.command(help="Rotates an image. A degree will have to be provided.")
     async def rotate(self, ctx, degree=None, url=None):
         if degree is None:
             await ctx.send(embed=objectfile.twoembed("How am I gonna rotate this?",
@@ -76,7 +76,7 @@ class Images(commands.Cog):
             return
         else:
             if url is None:
-                if ctx.message.attachments[0] is not None:
+                if ctx.message.attachments:
                     await ctx.message.attachments[0].save("image.png")
             else:
                 async with aiohttp.ClientSession() as session:
@@ -96,10 +96,10 @@ class Images(commands.Cog):
         width, height = img.size
         img.resize((round(width * 1.25), round(height * 1.25))).save("image.png")
 
-    @commands.command()
+    @commands.command(help="Enlarges an image.")
     async def enlarge(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 await ctx.message.attachments[0].save("image.png")
         else:
             async with aiohttp.ClientSession() as session:
@@ -114,7 +114,7 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Turns an image or gif gay (like the frogs)")
     async def gay(self, ctx, url=None):
         if url is None:
             url = str(ctx.message.author.avatar_url).replace('.webp', '.png')
@@ -125,10 +125,10 @@ class Images(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Triggers an image or gif.")
     async def triggered(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 url = ctx.message.attachments[0].url
         triggerfier = client.filter(option="triggered", url=url)
         embed = objectfile.twoembed("Your image/GIF just got triggered!",
@@ -139,10 +139,10 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Spins an image or gif.")
     async def spin(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 url = ctx.message.attachments[0].url
         spinner = client.filter(option="spin", url=url)
         embed = objectfile.twoembed("Your image/GIF just got spun!",
@@ -153,10 +153,10 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Turns an image or gif red.")
     async def red(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 url = ctx.message.attachments[0].url
         redifier = client.filter(option="red", url=url)
         embed = objectfile.twoembed("Your image just turned to red!",
@@ -167,10 +167,10 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Turns an image or gif green.")
     async def green(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 url = ctx.message.attachments[0].url
         greenifier = client.filter(option="green", url=url)
         embed = objectfile.twoembed("Your image just turned to green!",
@@ -181,10 +181,10 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Turns an image or gif blue.")
     async def blue(self, ctx, url=None):
         if url is None:
-            if ctx.message.attachments[0] is not None:
+            if ctx.message.attachments:
                 url = ctx.message.attachments[0].url
         blueifier = client.filter(option="blue", url=url)
         embed = objectfile.twoembed("Your image just turned to blue!",

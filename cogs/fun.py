@@ -83,7 +83,7 @@ class Fun(commands.Cog):
                 await logs.send(embed=embed_var1)
                 return embed_var1
 
-    @commands.command()
+    @commands.command(help="Posts the last deleted message in the channel.")
     async def snipe(self, ctx):
         if self.bot.snipe == {}:
             embed = objectfile.twoembed("No logged messages.",
@@ -101,7 +101,7 @@ class Fun(commands.Cog):
                                         "in this channel!")
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Posts the last edited message in the channel.")
     async def editsnipe(self, ctx):
         if self.bot.editsnipe == {}:
             embed = objectfile.twoembed("No logged messages.",
@@ -119,7 +119,7 @@ class Fun(commands.Cog):
                                         "in this channel!")
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Posts a meme.")
     async def meme(self, ctx):
         try:
             async with aiosqlite.connect('compassdb.db') as db:
@@ -134,7 +134,7 @@ class Fun(commands.Cog):
                 await db.commit()
             await ctx.send("No memes in the table, try again later.")
 
-    @commands.command()
+    @commands.command(help="Quotes something.")
     async def quote(self, ctx):
         try:
             async with aiosqlite.connect('compassdb.db') as db:
@@ -157,7 +157,7 @@ class Fun(commands.Cog):
         ret.seek(0)
         return ret
 
-    @commands.command()
+    @commands.command(help="Says something in TTS. But, you have to provide the something")
     async def tts(self, ctx, *, text: typing.Union[str, commands.clean_content]):
         try:
             fp = await ctx.bot.loop.run_in_executor(None, self.tts_moment, text)
@@ -166,7 +166,7 @@ class Fun(commands.Cog):
             await ctx.send(embed=objectfile.newfailembed("This text has no letters or numbers!",
                                                          "pls fix"))
 
-    @commands.command()
+    @commands.command(help="Says something on your behalf.")
     async def say(self, ctx, *, what_to_be_said=None):
         author = ctx.message.author
         author_avatar = ctx.message.author.avatar_url
@@ -181,7 +181,7 @@ class Fun(commands.Cog):
         embed.set_footer(text=f"{current_time}")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Basically the say command but not an embed")
     async def saytext(self, ctx, *, replace):
         msg = replace.replace("@", "@\u200b")
         author = ctx.message.author
@@ -189,7 +189,7 @@ class Fun(commands.Cog):
         await ctx.send(f"__Say command executed!__\n**Message sent by {author}**\n{msg}\n**Time**\n{current_time}")
 
 
-    @commands.command()
+    @commands.command(help="Searches Wikipedia.")
     async def wikipedia(self, ctx, *, arg):
         wikipedia.set_lang("en")
         query = arg
@@ -206,12 +206,12 @@ class Fun(commands.Cog):
             embed.set_footer(text=search_results.url)
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Shows a random person.")
     async def someone(self, ctx):
         await ctx.send(embed=objectfile.twoembed(f"{ctx.message.author}, here's someone.",
                                                  str(random.choice(ctx.message.guild.members))))
 
-    @commands.command()
+    @commands.command(help="Communicates with cleverbot.")
     async def chat(self, ctx, *, arg:str=None):
         if arg is None:
             embed = objectfile.failembed(f"You need a message!",
@@ -227,7 +227,7 @@ class Fun(commands.Cog):
                 embed = objectfile.twoembed(f"Cleverbot's response!", chatbot)
                 await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Screenshots a website.")
     async def screenshot(self, ctx, url):
         if url == "https://www.pornhub.com" or "https://www.xvideos.com":
             # if ctx.message.channel.is_nsfw():
@@ -247,7 +247,7 @@ class Fun(commands.Cog):
         embed.set_footer(text="Screenshots courtesy of https://image.thum.io")
         await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command(help="Rolls a number. Format: roll 69 420")
     async def roll(self, ctx, *, arg):
         roll_list = arg.split(" ")
         min_value = 1
@@ -261,7 +261,7 @@ class Fun(commands.Cog):
         await ctx.send(embed=objectfile.mainembed(f"Dice rolled!", f"{total}", f"Total Rolls; {filetext}"))
         filetext.clear()
 
-    @commands.command()
+    @commands.command(help="Rates you from 0-100, with 0 being not a redditor and 100 being a diehard r/dankmemes fan.")
     async def redditrating(self, ctx):
         randomize = random.randint(0, 100)
         descriptioncalc = ""
@@ -275,18 +275,18 @@ class Fun(commands.Cog):
         await ctx.send(embed=objectfile.mainembed(f"Your redditor percentage!", randomize,
                                                   descriptioncalc))
 
-    @commands.command()
+    @commands.command(help="Posts the EDT time.")
     async def time(self, ctx):
         await ctx.send(embed=objectfile.twoembed("The current time is...", datetime.datetime.now()))
 
-    @commands.command()
+    @commands.command(help="Posts the tab list of 2b2t.")
     async def tablist(self, ctx):
         embed = objectfile.twoembed("Your tablist!",
                                     "Tablist from https://tab.2b2t.dev.")
         embed.set_image(url="https://tab.2b2t.dev/")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Builds an embed. (Broken)")
     async def embed(self, ctx):
         await ctx.send("Please provide a colo(u)r in rgb pls\n"
                        "Example: 1 1 1")
@@ -316,7 +316,7 @@ class Fun(commands.Cog):
             description = f"{bruh_moment.content.lower()[0]}"
         await ctx.send(discord.Embed(title=title, description=description, color=color, timestamp=datetime.datetime.utcnow()))
 
-    @commands.command()
+    @commands.command(help="Posts yours or a other user's dick size.")
     async def dicksize(self, ctx, user: discord.User = None):
         number = random.randint(0, 20)
         member = ""
@@ -340,7 +340,7 @@ class Fun(commands.Cog):
                                                      f"8{str('=') * number}D ({measurements})"))
 
     @commands.cooldown(1, 5)
-    @commands.command()
+    @commands.command(help="Posts something to [mystb.in](https://mystb.in/).")
     async def mystbin(self, ctx, *, paste):
         await ctx.send(embed=objectfile.twoembed("Pasting to mystb.in...",
                                                  "You'll see it soon."))
@@ -348,7 +348,7 @@ class Fun(commands.Cog):
         await ctx.send(embed=objectfile.twoembed("Your mystb.in!",
                                                  str(pasteurl)))
 
-    @commands.command()
+    @commands.command(help="Ships the author and a specified user (you don't have to provide a user.)")
     async def ship(self, ctx, user: typing.Union[discord.Member, discord.User] = None):
         if user is None:
             funny_list = []
@@ -376,13 +376,13 @@ class Fun(commands.Cog):
         embed.set_thumbnail(url=user.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(help="Flips a coin.")
     async def coinflip(self, ctx):
         coin = random.choice(["Heads!", "Tails!"])
         await ctx.send(embed=objectfile.twoembed(coin,
                                                  "🪙"))
 
-    @commands.command(aliases=['rps', 'rock_paper_scissors'])
+    @commands.command(help="Plays a game of rock paper scissors.", aliases=['rps', 'rock_paper_scissors'])
     async def rockpaperscissors(self, ctx):
         timeoutbed = objectfile.twoembed("Timed out.",
                                          "you spent too long lol")

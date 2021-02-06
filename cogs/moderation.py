@@ -31,7 +31,7 @@ class Moderation(commands.Cog):
         self.bot = bot
 
 
-    @commands.command()
+    @commands.command(help="Kicks a user. Only users with the kick permission can use this.")
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, user: typing.Union[discord.Member, discord.User], reason=None):
         if ctx.author == user:
@@ -64,7 +64,7 @@ class Moderation(commands.Cog):
                                                                                                    "mod."))
             return
 
-    @commands.command()
+    @commands.command(help="Bans a user. Only users with the ban permission can use this.")
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, user: typing.Union[discord.Member, discord.User], reason):
         if ctx.author == user:
@@ -98,7 +98,7 @@ class Moderation(commands.Cog):
                                                                                                   "mod."))
             return
 
-    @commands.command()
+    @commands.command(help="Hackbans a user. Only users with the ban permission can use this. (Broken)")
     @commands.has_permissions(ban_members=True)
     async def hackban(self, ctx, member, reason):
         user = await self.bot.get_user(member)
@@ -125,7 +125,7 @@ class Moderation(commands.Cog):
                 await ctx.send(embed=embed2)
                 await user.ban(reason=reason, delete_message_days=0)
 
-    @commands.command()
+    @commands.command(help="Adds a emoji. Only users with the add emoji permission can use this. (Broken)")
     @commands.has_permissions(manage_emojis=True)
     async def addemoji(self, ctx, name):
         await self.bot.create_custom_emoji(name=str(name), image=bytes(ctx.message.attachment), roles=None,
@@ -140,7 +140,7 @@ class Moderation(commands.Cog):
                                                       "Become monkey, become Discord mod."))
             return
 
-    @commands.command()
+    @commands.command(help="Clears a certain amount of messages. Only users with the manage messages permission can use this.")
     @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx, num: int, target: typing.Union[discord.Member, discord.User] = None):
         if num > 500 or num < 0:
@@ -162,7 +162,7 @@ class Moderation(commands.Cog):
                                                       "Become monkey, become Discord mod."))
             return
 
-    @commands.command()
+    @commands.command(help="Removes the bot from the guild. Only users with manage server permissions can use this.")
     @commands.has_permissions(manage_guild=True)
     async def leave(self, ctx):
         await ctx.send(embed=objectfile.failembed("The owners of this server asked me to leave.",

@@ -30,7 +30,6 @@ import objectfile
 import logging
 import yaml
 import aiohttp
-import aiosqlite
 import asyncio
 from datetime import datetime
 from github import Github

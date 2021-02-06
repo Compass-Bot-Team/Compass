@@ -33,14 +33,15 @@ import io
 import asyncpixel
 import aiosqlite
 import time
+import ipinfo
 from MojangAPI import Client
-from datetime import datetime
 from discord.ext import commands
 from objectfile import iourl, devurl
 
 config = yaml.safe_load(open("config.yml"))
 client = sr_api.Client(config['srakey'])
 hypixel = asyncpixel.Client(config['hypixelapikey'])
+handler = ipinfo.getHandler(access_token=config['ipinfokey'])
 _2b2t_logo = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/2b2t_Logo_Vectorised.svg/1200px-2b2t_Logo_Vectorised.svg.png"
 reddit = asyncpraw.Reddit(client_id=config['redditauth'][1], client_secret=config['redditauth'][0],
                           password=config['password'], user_agent=config['redditauth'][2],
@@ -577,6 +578,19 @@ class APIs(commands.Cog):
         embed.add_field(name="Resolved At", value=incident['resolved_at'].replace("T", " "), inline=True)
         embed.add_field(name="Monitoring At", value=incident['monitoring_at'].replace("T", " "), inline=True)
         embed.add_field(name="ID", value=incident['page_id'].replace("T", " "), inline=True)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def ip(self, ctx, *, ip: str):
+        details = await handler.getDetails(ip)
+        embed = discord.Embed(colour=objectfile.embedcolor(), title=f"Info about IP {ip}!",
+                              url="https://ipinfo.io/")
+        embed.add_field(name="Location", value=f"{details.city}, {details.region}, {details.country}", inline=True)
+        embed.add_field(name="Latitude & Longitude", value=details.loc, inline=True)
+        embed.add_field(name="Hostname", value=details.hostname, inline=True)
+        embed.add_field(name="Organization", value=details.org, inline=True)
+        embed.add_field(name="Postal", value=details.postal, inline=True)
+        embed.add_field(name="Timezone", value=details.timezone, inline=True)
         await ctx.send(embed=embed)
 
 
