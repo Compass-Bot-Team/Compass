@@ -567,7 +567,7 @@ class APIs(commands.Cog):
         embed = objectfile.twoembed(f"{text} decoded!", decodedtext)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['discord_status'])
+    @commands.command(aliases=['discord_status'], help="Posts the status of Discord.")
     async def discordstatus(self, ctx):
         async with aiohttp.ClientSession() as cs:
             async with cs.get("https://srhpyqt94yxb.statuspage.io/api/v2/incidents.json") as page:
@@ -576,11 +576,13 @@ class APIs(commands.Cog):
         embed = discord.Embed(color=0x202225, url=incident['shortlink'],
                               title=incident['name'] + " | " + incident['impact'],
                               description=incident['incident_updates'][0]['body'])
-        embed.add_field(name="Found At", value=incident['created_at'].replace("T", " "), inline=True)
-        embed.add_field(name="Updated At", value=incident['updated_at'].replace("T", " "), inline=True)
-        embed.add_field(name="Resolved At", value=incident['resolved_at'].replace("T", " "), inline=True)
-        embed.add_field(name="Monitoring At", value=incident['monitoring_at'].replace("T", " "), inline=True)
+        embed.add_field(name="Created At", value=incident['created_at'].replace("T", " "), inline=True)
+        if 'monitoring_at' in incident:
+            embed.add_field(name="Monitoring At", value=incident['monitoring_at'].replace("T", " "), inline=True)
+        if 'resolved_at' in incident:
+            embed.add_field(name="Resolved At", value=incident['resolved_at'].replace("T", " "), inline=True)
         embed.add_field(name="ID", value=incident['page_id'].replace("T", " "), inline=True)
+        embed.timestamp = datetime.datetime.strptime(incident['updated_at'].replace("T", " "), '%Y-%m-%d %H:%M:%S.%f%z')
         await ctx.send(embed=embed)
 
     @commands.command()
