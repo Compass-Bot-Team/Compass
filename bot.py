@@ -49,7 +49,6 @@ bot.command_num = 0
 bot.total_messages = 0
 bot.message_senders = {}
 bot.guild_senders = {}
-bot.guild_senders_actual = {}
 midnight = datetime.time(hour=0)
 bot.launch_time = datetime.datetime.utcnow()
 bot.command_users = {}
@@ -71,17 +70,24 @@ def has_admin():
             return True
         else:
             return False
-
     return commands.check(predicate)
 
 
 @tasks.loop(minutes=5)
 async def status():
-    guilds = "{:,}".format((len(list(bot.guilds))))
-    members = "{:,}".format(len(bot.users))
     await bot.change_presence(activity=Activity(type=ActivityType.watching,
-                                                name=f"discord.gg/SymdusT - {guilds} servers and {members}"
-                                                     f" members!"))
+                                                name=f"discord.gg/SymdusT - {len(bot.guilds):,} servers and "
+                                                     f"{len(bot.users):,}  members!"))
+
+
+async def cleanse_dict():
+    while True:
+        now = datetime.datetime.utcnow()
+        date = now.date()
+        if now.time() > midnight:
+            date = now.date() + datetime.timedelta(days=1)
+            bot.guild_senders.clear()
+        await discord.utils.sleep_until(datetime.datetime.combine(date, midnight))
 
 
 @bot.event
@@ -93,6 +99,7 @@ async def on_ready():
     await channel.send(embed=embed)
     print(str(bot.guilds))
     status.start()
+    bot.loop.create_task(await cleanse_dict())
     print([x[0]['message'] for x in update_requirements(input_file='requirements.txt').values()])
 
 
@@ -166,13 +173,16 @@ async def restartallcogs(ctx):
 @bot.command(help="Basically a more efficient version of eval. Owner only command.")
 async def shell(ctx, *, command: str):
     directory = os.getcwd()
-    proc = await asyncio.create_subprocess_shell(f"cd {directory} & {command}", stdout=asyncio.subprocess.PIPE,
-                                                 stderr=asyncio.subprocess.PIPE)
-    stdout, stderr = await proc.communicate()
-    if stdout:
-        await ctx.send(f'```py\n[stdout]\n{stdout.decode()}\n```')
-    if stderr:
-        await ctx.send(f'```py\n[stderr]\n{stderr.decode()}\n```')
+    returned = ""
+    async with ctx.channel.typing():
+        proc = await asyncio.create_subprocess_shell(f"cd {directory} & {command}", stdout=asyncio.subprocess.PIPE,
+                                                     stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await proc.communicate()
+        if stdout:
+            returned += f'[stdout]\n{stdout.decode()}'
+        if stderr:
+            returned += f'[stderr]\n{stderr.decode()}'
+    await ctx.send(f'```py\n{returned}\n```')
 
 
 @commands.is_owner()
@@ -230,8 +240,8 @@ class MyHelp(commands.HelpCommand):
         antonio = bot.get_user(210473676339019776)
         embed = Embed(title="Help", description=f"{self.clean_prefix} is this server's prefix.\n"
                                                 f"**__Credits__**\n"
-                                                f"<@{legitsi.id}> ({legitsi.name}#{legitsi.discriminator}) for giving me DHC.\n"
-                                                f"<@{antonio.id}> ({antonio.name}#{antonio.discriminator}) for making the logo.",
+                                                f"<@{legitsi.id}> ({legitsi}) for giving me DHC.\n"
+                                                f"<@{antonio.id}> ({antonio}) for making the logo.",
                       color=0x202225)
         for cog, commands in mapping.items():
             filtered = await self.filter_commands(commands, sort=True)
@@ -252,17 +262,6 @@ for filename in os.listdir('cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
         baselogger.info(f"Loading cog cogs.{filename[:-3]}")
 
-async def cleanse_dict():
-    while True:
-        now = datetime.datetime.utcnow()
-        date = now.date()
-        if now.time() > midnight:
-            date = now.date() + datetime.timedelta(days=1)
-            bot.guild_senders_actual.clear()
-        await discord.utils.sleep_until(datetime.datetime.combine(date, midnight))
-
-
-bot.loop.create_task(cleanse_dict())
 bot.load_extension("jishaku")
 baselogger.info(f"Loading cog jishaku (outside of main folder)")
 bot.run(config['token'])
