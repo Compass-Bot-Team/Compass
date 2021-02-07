@@ -34,11 +34,14 @@ import asyncpixel
 import aiosqlite
 import time
 import ipinfo
+import datetime
+import itertools
 from MojangAPI import Client
 from discord.ext import commands
 from objectfile import iourl, devurl
 
 config = yaml.safe_load(open("config.yml"))
+lunarkey = config['lunarkey']
 client = sr_api.Client(config['srakey'])
 hypixel = asyncpixel.Client(config['hypixelapikey'])
 handler = ipinfo.getHandler(access_token=config['ipinfokey'])
@@ -593,6 +596,27 @@ class APIs(commands.Cog):
         embed.add_field(name="Timezone", value=details.timezone, inline=True)
         await ctx.send(embed=embed)
 
+    @commands.command(help='Posts the most recent NHC advisory in a basin. You are required to give a basin')
+    async def advisory(self, ctx, *, basin: str):
+        atlantic_list = (list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Atl')))) + list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Atlantic')))))
+        epac_list = (list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Epac')))) + list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Eastern Pacific')))) + list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'East Pacific')))))
+        cpac_list = (list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Cpac')))) + list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Central Pacific')))))
+        if basin in atlantic_list:
+            number = 0
+        if basin in epac_list:
+            number = 1
+        if basin in cpac_list:
+            number = 2
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get("https://api.rss2json.com/v1/api.json",
+                              params={"rss_url": "https://www.nhc.noaa.gov/gtwo.xml"}) as website:
+                api = await website.json()
+        basin = api["items"][number]
+        embed = objectfile.twoembed(basin["title"], basin["description"])
+        embed.set_thumbnail(url=api["feed"]["image"])
+        embed.url = basin["link"]
+        embed.timestamp = datetime.datetime.strptime(basin["pubDate"], '%Y-%m-%d %H:%M:%S')
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(APIs(bot))
