@@ -33,7 +33,6 @@ import aiosqlite
 import asyncio
 import pkg_resources
 import os
-import operator
 from bot import has_admin
 from .server import blacklisted_or_not
 from datetime import datetime
@@ -68,12 +67,12 @@ class Utilities(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot:
+        if message.author.bot or message.webhook_id is not None:
             return
         else:
             other_dictionary = self.bot.guild_senders
             if message.guild is not None:
-                if message.guild.id not in other_dictionary:
+                if f"{message.guild} ({message.guild.id})" not in other_dictionary:
                     other_dictionary[f"{message.guild} ({message.guild.id})"] = 1
                 else:
                     other_dictionary[f"{message.guild} ({message.guild.id})"] += 1
