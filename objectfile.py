@@ -381,12 +381,12 @@ async def noliferusers(bot):
     return no_lifers_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
 
 async def noliferguilds(bot):
-    no_lifers = sorted(bot.guild_senders.items(), key=operator.itemgetter(1), reverse=True)
-    no_lifers_raw = f''
-    for count, (guild, messages) in enumerate(no_lifers):
+    guild_leaderboards_raw = f''
+    _servers = sorted(bot.guild_senders.items(), key=operator.itemgetter(1), reverse=True)
+    for count, (guild, messages) in enumerate(_servers):
         if count < 3:
-            no_lifers_raw += f'#{count + 1} {guild} with {messages} messages sent\n'
-    return no_lifers_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+            guild_leaderboards_raw += f'#{count + 1} {guild} with {messages} messages sent\n'
+    return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
 
 async def checkfail(server):
     checkfail = newfailembed(f"You aren't in {server}!",
