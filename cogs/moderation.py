@@ -98,48 +98,6 @@ class Moderation(commands.Cog):
                                                                                                   "mod."))
             return
 
-    @commands.command(help="Hackbans a user. Only users with the ban permission can use this. (Broken)")
-    @commands.has_permissions(ban_members=True)
-    async def hackban(self, ctx, member, reason):
-        user = await self.bot.get_user(member)
-        if ctx.author == user:
-            await ctx.send(embed=objectfile.failembed(f"You can't ban yourself, {ctx.message.author}.",
-                                                      "You can kick ban BUT yourself!", "Try someone else."))
-        else:
-            if reason is None:
-                embed = objectfile.failembed(f"Pls give a reason {ctx.message.author}.",
-                                             f"This needs a reason!",
-                                             f"If you don't have a reason what's the point?")
-                embed.set_thumbnail(url=f"{user.avatar_url}")
-                await ctx.send(embed=embed)
-            else:
-                # Ban user
-                embed1 = objectfile.failembed(f"You got banned off {ctx.guild.name}.",
-                                              f"You were banned by {ctx.message.author}.",
-                                              f"Reason; {reason}")
-                embed1.set_thumbnail(url=f"{user.avatar_url}")
-                await user.send(embed=embed1)
-                embed2 = objectfile.successembed(f"User {user} banned!", "See you later.",
-                                                 f"Reason: {reason}")
-                embed2.set_thumbnail(url=f"{user.avatar_url}")
-                await ctx.send(embed=embed2)
-                await user.ban(reason=reason, delete_message_days=0)
-
-    @commands.command(help="Adds a emoji. Only users with the add emoji permission can use this. (Broken)")
-    @commands.has_permissions(manage_emojis=True)
-    async def addemoji(self, ctx, name):
-        await self.bot.create_custom_emoji(name=str(name), image=bytes(ctx.message.attachment), roles=None,
-                                           reason=None)
-        await ctx.send(embed=objectfile.twoembed(f"Added emoji {name} to the server!",
-                                                 "There ya go."))
-
-    @addemoji.error
-    async def addemoji_error(self, error, ctx):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=objectfile.failembed("You can't add an emoji!", "You have to get perms.",
-                                                      "Become monkey, become Discord mod."))
-            return
-
     @commands.command(help="Clears a certain amount of messages. Only users with the manage messages permission can use this.")
     @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx, num: int, target: typing.Union[discord.Member, discord.User] = None):
