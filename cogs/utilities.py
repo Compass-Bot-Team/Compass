@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 import discord
 import humanize
 import pkg_resources
@@ -63,9 +67,9 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
     async def on_message(self, message):
         # just helping friends pls ignore this
         people = [574984194024013825, 210958048691224576]
-        swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fuck", "shitted", "shitting", "fucker", "motherfucker", "dogshit", "bullshit", "ass", "faggot", "goddamn", "fag"]
-        swearss = list(f"{swear}s" for swear in swears)
-        if message.author.id in people and message.content in swears or message.content in swearss:
+        swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fuck", "shitted", "shitting", "fucker",
+                  "motherfucker", "dogshit", "bullshit", "ass", "faggot", "goddamn", "fag"]
+        if message.author.id in people and message.content in swears:
             await message.channel.send(f"<@{message.author.id}> STOP SWEARING <:TBK_witheredwojak:742475096366776370>")
         # ok now this is actually cache stuff below this line
         if message.author.bot or message.webhook_id is not None:
