@@ -283,11 +283,8 @@ __pycache__/objectfile.cpython-38.pyc
 /cogs/__pycache__/
 src/
 lavalink/
+config.yml
 databases/bank.json
 .idea
-image.png
-config.yml
-databases/
 tts.mp3
-compassdb.db
-lavalink/
+storage.db

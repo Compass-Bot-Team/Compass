@@ -20,179 +20,322 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import aiozaneapi
 import discord
-import objectfile
-import aiohttp
-import aiofiles
-import yaml
-import sr_api
+import io
+import validators
 import typing
-import random
-from io import BytesIO
+import sr_api
+import aiohttp
 from functools import partial
-from PIL import Image, ImageFilter
+from utils import embeds, image_processors
 from discord.ext import commands
 
-config = yaml.safe_load(open("config.yml"))
-client = sr_api.Client(config['srakey'])
 
-class Images(commands.Cog):
+class Images(commands.Cog, description='The bucket load of image manipulation.'):
     def __init__(self, bot):
         self.bot = bot
+        self.client = aiozaneapi.Client(self.bot.config["zanekey"])
+        self.sr_client = sr_api.Client()
 
-    @staticmethod
-    def blur_processor():
-        img = Image.open("image.png")
-        img.filter(ImageFilter.GaussianBlur()).save("image.png")
+    async def none(self, ctx):
+        if ctx.message.attachments:
+            argument = str(ctx.message.attachments[0].url)
+        else:
+            argument = str(ctx.author.avatar_url)
+        return argument
 
-    @commands.command(help="Blurs an image.")
-    async def blur(self, ctx, url=None):
-        if url is None:
+    async def none_srapi(self, ctx):
+        if ctx.message.attachments:
+            argument = str(ctx.message.attachments[0].url).replace(".webp", ".png").replace(".gif", ".png")
+        else:
+            argument = str(ctx.author.avatar_url_as(format="png", static_format="png"))
+        return argument
+
+    async def convert_to_bytes_better(self, user, argument, ctx):
+        if user is not None and argument is None:
+            bytes_to_give = bytes(await user.avatar_url.read())
+        elif argument is None:
             if ctx.message.attachments:
-                await ctx.message.attachments[0].save("image.png")
-        else:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as urlgrabber:
-                    file = await aiofiles.open('image.png', mode='wb')
-                    await file.write(await urlgrabber.read())
-                    await file.close()
-        file = discord.File("image.png")
-        await self.bot.loop.run_in_executor(None, partial(self.blur_processor))
-        embed = objectfile.twoembed(f"{ctx.message.author}, image blurred!", "Blurry.")
-        embed.set_image(url="attachment://image.png")
-        await ctx.send(embed=embed, file=file)
-
-    @staticmethod
-    def rotate_processor(degree):
-        img = Image.open("image.png")
-        img.rotate(int(degree)).save("image.png")
-
-    @commands.command(help="Rotates an image. A degree will have to be provided.")
-    async def rotate(self, ctx, degree=None, url=None):
-        if degree is None:
-            await ctx.send(embed=objectfile.twoembed("How am I gonna rotate this?",
-                                                     "I don't have a degree!\n"
-                                                     "Example: compass!rotate 90 https://cdn.discordapp.com/attachments/777248921205866546/792456542640668732/compass.png"))
-            return
-        else:
-            if url is None:
-                if ctx.message.attachments:
-                    await ctx.message.attachments[0].save("image.png")
+                bytes_to_give = bytes(await ctx.message.attachments[0].read())
             else:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as urlgrabber:
-                        file = await aiofiles.open('image.png', mode='wb')
-                        await file.write(await urlgrabber.read())
-                        await file.close()
-            await self.bot.loop.run_in_executor(None, partial(self.rotate_processor(degree)))
-            file = discord.File("image.png")
-            embed = objectfile.twoembed(f"{ctx.message.author}, image rotated!", "Rotated.")
-            embed.set_image(url="attachment://image.png")
-            await ctx.send(embed=embed, file=file)
-
-    @staticmethod
-    def enlarge_processor():
-        img = Image.open("image.png")
-        width, height = img.size
-        img.resize((round(width * 1.25), round(height * 1.25))).save("image.png")
-
-    @commands.command(help="Enlarges an image.")
-    async def enlarge(self, ctx, url=None):
-        if url is None:
-            if ctx.message.attachments:
-                await ctx.message.attachments[0].save("image.png")
-        else:
+                bytes_to_give = bytes(await ctx.author.avatar_url.read())
+        elif argument is not None:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url) as urlgrabber:
-                    file = await aiofiles.open('image.png', mode='wb')
-                    await file.write(await urlgrabber.read())
-                    await file.close()
-        await self.bot.loop.run_in_executor(None, partial(self.enlarge_processor))
-        file = discord.File("image.png")
-        embed = objectfile.twoembed(f"{ctx.message.author}, image enlarged!", "Enlarged by 25%.")
-        embed.set_image(url="attachment://image.png")
+                async with session.get(argument) as grabber:
+                    bytes_to_give = bytes(await grabber.read())
+        return bytes_to_give
+
+    @commands.command(help='Blurs an image, URL or user.')
+    async def blur(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        async with ctx.channel.typing():
+            bytes_to_give = await self.convert_to_bytes_better(user, argument, ctx)
+            buy_one_and_get_one_free = await self.bot.loop.run_in_executor(None, partial(image_processors.blur_processor, bytes_to_give))
+        file = discord.File(filename="blur.png", fp=buy_one_and_get_one_free)
+        embed = embeds.imgembed("Blurred!", "attachment://blur.png")
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(help='Rotates an image, URL or user.')
+    async def rotate(self, ctx, degree: int, user: typing.Optional[discord.User], *, argument: str = None):
+        async with ctx.channel.typing():
+            bytes_to_give = await self.convert_to_bytes_better(user, argument, ctx)
+            buy_one_and_get_one_free = await self.bot.loop.run_in_executor(None, partial(
+                image_processors.rotate_processor, degree, bytes_to_give))
+        file = discord.File(filename="rotate.png", fp=buy_one_and_get_one_free)
+        embed = embeds.imgembed("Rotated!", "attachment://rotate.png")
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(help='Enlarges an image, URL or user.')
+    async def enlarge(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        async with ctx.channel.typing():
+            bytes_to_give = await self.convert_to_bytes_better(user, argument, ctx)
+            buy_one_and_get_one_free = await self.bot.loop.run_in_executor(None, partial(
+                image_processors.enlarge_processor, bytes_to_give))
+        file = discord.File(filename="enlarged.png", fp=buy_one_and_get_one_free)
+        embed = embeds.imgembed("Enlarged!", "attachment://enlarged.png")
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(help='Turns an image, URL, or user into the floor.')
+    async def floor(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            floor = await self.client.floor(str(argument))
+        file = discord.File(fp=floor, filename="floor.gif")
+        embed = embeds.imgembedforzane("Floor.",
+                                       "attachment://floor.gif")
         await ctx.send(embed=embed, file=file)
 
-    @commands.cooldown(1, 5)
-    @commands.command(help="Turns an image or gif gay (like the frogs)")
-    async def gay(self, ctx, url=None):
-        if url is None:
-            url = str(ctx.message.author.avatar_url).replace('.webp', '.png')
-        gayifier = client.filter(option="gay", url=url)
-        embed = objectfile.twoembed("Your gay image!",
-                                    f"[URL]({gayifier})")
-        embed.set_image(url=gayifier.url)
-        await ctx.send(embed=embed)
+    @commands.command(help='Turns an image, URL, or user into magic.', aliases=['magik'])
+    async def magic(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            magic = await self.client.magic(str(argument))
+        file = discord.File(fp=magic, filename="magic.gif")
+        embed = embeds.imgembedforzane("Magic.",
+                                       "attachment://magic.gif")
+        await ctx.send(embed=embed, file=file)
 
-    @commands.cooldown(1, 5)
-    @commands.command(help="Triggers an image or gif.")
-    async def triggered(self, ctx, url=None):
-        if url is None:
-            if ctx.message.attachments:
-                url = ctx.message.attachments[0].url
-        triggerfier = client.filter(option="triggered", url=url)
-        embed = objectfile.twoembed("Your image/GIF just got triggered!",
-                                    f"[URL]({triggerfier})")
-        buffer = BytesIO(await triggerfier.read())
+    @commands.command(help='Deepfries an image, URL, or user.')
+    async def deepfry(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            deepfry = await self.client.deepfry(str(argument))
+        file = discord.File(fp=deepfry, filename="deepfry.png")
+        embed = embeds.imgembedforzane("Deepfried.",
+                                       "attachment://deepfry.png")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help='Turns an Image, URL or User into dots.')
+    async def dots(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            dots = await self.client.dots(str(argument))
+        file = discord.File(fp=dots, filename="dots.png")
+        embed = embeds.imgembedforzane("Dots.",
+                                       "attachment://dots.png")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help='Converts an Image, URL or User into a JPEG.')
+    async def jpeg(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            jpeg = await self.client.jpeg(str(argument))
+        file = discord.File(fp=jpeg, filename="jpeg.png")
+        embed = embeds.imgembedforzane("JPEG.",
+                                       "attachment://jpeg.png")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help='Spreads an Image, URL or User.')
+    async def spread(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            spread = await self.client.spread(str(argument))
+        file = discord.File(fp=spread, filename="spread.gif")
+        embed = embeds.imgembedforzane("Spreaded.",
+                                       "attachment://spread.gif")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help='Turns an Image, URL or User into a Cube.')
+    async def cube(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            cube = await self.client.cube(str(argument))
+        file = discord.File(fp=cube, filename="cube.png")
+        embed = embeds.imgembedforzane("Cube.",
+                                       "attachment://cube.png")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help='Sorts an Image, URL or User.')
+    async def sort(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if user is not None and argument is None:
+            argument = str(user.avatar_url)
+        if argument is None:
+            argument = await self.none(ctx)
+        if validators.url(str(argument)) is False:
+            return await ctx.send("Invalid URL.")
+        async with ctx.channel.typing():
+            sort = self.client.sort(str(argument))
+        file = discord.File(fp=sort, filename="sort.png")
+        embed = embeds.imgembedforzane("Sorted.",
+                                       "attachment://sort.png")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help="Turns an image, gif or user gay (like the frogs)")
+    async def gay(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = argument.replace(".webp", ".png").replace(".gif", ".png")
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            gayifier = self.sr_client.filter(option="gay", url=argument)
+        embed = embeds.imgembedforsrapi("Gay!",
+                                        "attachment://gay.gif")
+        buffer = io.BytesIO(await gayifier.read())
+        file = discord.File(fp=buffer, filename="gay.gif")
+        await ctx.send(embed=embed, file=file)
+
+    @commands.command(help="Triggers an image, gif or user.")
+    async def triggered(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = argument.replace(".webp", ".png").replace(".gif", ".png")
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            triggerfier = self.sr_client.filter(option="triggered", url=argument)
+        embed = embeds.imgembedforsrapi("Triggered!",
+                                        "attachment://triggered.gif")
+        buffer = io.BytesIO(await triggerfier.read())
         file = discord.File(fp=buffer, filename="triggered.gif")
-        embed.set_image(url=f"attachment://triggered.gif")
         await ctx.send(embed=embed, file=file)
 
-    @commands.cooldown(1, 5)
-    @commands.command(help="Spins an image or gif.")
-    async def spin(self, ctx, url=None):
-        if url is None:
-            if ctx.message.attachments:
-                url = ctx.message.attachments[0].url
-        spinner = client.filter(option="spin", url=url)
-        embed = objectfile.twoembed("Your image/GIF just got spun!",
-                                    f"[URL]({spinner})")
-        buffer = BytesIO(await spinner.read())
+    @commands.command(help="Spins an image, gif or user.")
+    async def spin(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = str(argument.replace(".webp", ".png").replace(".gif", ".png"))
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            spinner = self.sr_client.filter(option="spin", url=argument)
+        embed = embeds.imgembedforsrapi("Spinning!",
+                                        "attachment://spun.gif")
+        buffer = io.BytesIO(await spinner.read())
         file = discord.File(fp=buffer, filename="spun.gif")
         embed.set_image(url=f"attachment://spun.gif")
         await ctx.send(embed=embed, file=file)
 
-    @commands.cooldown(1, 5)
-    @commands.command(help="Turns an image or gif red.")
-    async def red(self, ctx, url=None):
-        if url is None:
-            if ctx.message.attachments:
-                url = ctx.message.attachments[0].url
-        redifier = client.filter(option="red", url=url)
-        embed = objectfile.twoembed("Your image just turned to red!",
-                                    f"[URL]({redifier})")
-        buffer = BytesIO(await redifier.read())
-        file = discord.File(fp=buffer, filename="red.png")
-        embed.set_image(url=f"attachment://red.png")
+    @commands.command(help="Turns an image, gif or user red.")
+    async def red(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = str(argument.replace(".webp", ".png").replace(".gif", ".png"))
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            redifier = self.sr_client.filter(option="red", url=argument)
+        embed = embeds.imgembedforsrapi("Red!",
+                                        "attachment://red.gif")
+        buffer = io.BytesIO(await redifier.read())
+        file = discord.File(fp=buffer, filename="red.gif")
+        embed.set_image(url=f"attachment://red.gif")
         await ctx.send(embed=embed, file=file)
 
-    @commands.cooldown(1, 5)
-    @commands.command(help="Turns an image or gif green.")
-    async def green(self, ctx, url=None):
-        if url is None:
-            if ctx.message.attachments:
-                url = ctx.message.attachments[0].url
-        greenifier = client.filter(option="green", url=url)
-        embed = objectfile.twoembed("Your image just turned to green!",
-                                    f"[URL]({greenifier})")
-        buffer = BytesIO(await greenifier.read())
-        file = discord.File(fp=buffer, filename="green.png")
-        embed.set_image(url=f"attachment://green.png")
+    @commands.command(help="Turns an image, gif or user green.")
+    async def green(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = str(argument.replace(".webp", ".png").replace(".gif", ".png"))
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            greenifier = self.sr_client.filter(option="green", url=argument)
+        embed = embeds.imgembedforsrapi("Green!",
+                                        "attachment://green.gif")
+        buffer = io.BytesIO(await greenifier.read())
+        file = discord.File(fp=buffer, filename="green.gif")
+        embed.set_image(url=f"attachment://green.gif")
         await ctx.send(embed=embed, file=file)
 
-    @commands.cooldown(1, 5)
-    @commands.command(help="Turns an image or gif blue.")
-    async def blue(self, ctx, url=None):
-        if url is None:
-            if ctx.message.attachments:
-                url = ctx.message.attachments[0].url
-        blueifier = client.filter(option="blue", url=url)
-        embed = objectfile.twoembed("Your image just turned to blue!",
-                                    f"[URL]({blueifier})")
-        buffer = BytesIO(await blueifier.read())
-        file = discord.File(fp=buffer, filename="blue.png")
-        embed.set_image(url=f"attachment://blue.png")
+    @commands.command(help="Turns an image, gif or user blue.")
+    async def blue(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = str(argument.replace(".webp", ".png").replace(".gif", ".png"))
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            blueifier = self.sr_client.filter(option="blue", url=argument)
+        embed = embeds.imgembedforsrapi("Blue!",
+                                        "attachment://blue.gif")
+        buffer = io.BytesIO(await blueifier.read())
+        file = discord.File(fp=buffer, filename="blue.gif")
+        embed.set_image(url=f"attachment://blue.gif")
         await ctx.send(embed=embed, file=file)
+
+    @commands.command(help="Wastes an image, gif or user.")
+    async def wasted(self, ctx, user: typing.Optional[discord.User], *, argument: str = None):
+        if argument is not None:
+            argument = str(argument.replace(".webp", ".png").replace(".gif", ".png"))
+        if user is not None and argument is None:
+            argument = str(user.avatar_url_as(format="png", static_format="png"))
+        if argument is None:
+            argument = str(await self.none_srapi(ctx))
+        async with ctx.channel.typing():
+            wastifier = self.sr_client.filter(option="wasted", url=argument)
+        embed = embeds.imgembedforsrapi("Wasted!",
+                                        "attachment://wasted.gif")
+        buffer = io.BytesIO(await wastifier.read())
+        file = discord.File(fp=buffer, filename="wasted.gif")
+        embed.set_image(url=f"attachment://wasted.gif")
+        await ctx.send(embed=embed, file=file)
+
+    def cog_unload(self):
+        self.task.cancel()
+        session.close()
+
 
 def setup(bot):
     bot.add_cog(Images(bot))
