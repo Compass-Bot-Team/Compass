@@ -10,6 +10,7 @@ import os
 import time
 import asyncio
 import inspect
+import aiohttp
 from utils import embeds
 from utils.useful_functions import prefix
 from discord.ext import commands
@@ -20,58 +21,6 @@ logging.Formatter.converter = time.gmtime
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
-
-
-async def lavalink():
-    lavalink_directory = f"{os.getcwd()}/lavalink"  # change this
-    request = f"cd {lavalink_directory} & java -jar Lavalink.jar"
-    await asyncio.create_subprocess_shell(request, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-
-bot = commands.Bot(command_prefix=prefix, description="Compass is an all-in-one bot coded in discord.py.",
-                   intents=discord.Intents.all())
-bot.launch_time = datetime.datetime.utcnow()
-bot.config = yaml.safe_load(open("config.yml"))
-bot.owner_ids = bot.config["owners"]
-
-# Cache
-bot.message_num = 0
-bot.command_num = 0
-bot.message_senders = {}
-bot.guild_senders = {}
-bot.command_users = {}
-bot.command_guilds = {}
-
-# DON'T LOAD cogs.tasks - BROKEN
-bot.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
-                  "cogs.fun", "cogs.images", "cogs.music", "cogs.utilities")
-
-# Loads cogs
-for cog in bot.cogs_tuple:
-    bot.load_extension(cog)
-    useful_functions.logger.info(f"Loaded cog {cog}")
-
-bot.load_extension("jishaku")
-useful_functions.logger.info(f"Loaded cog jishaku (outside of main folder)")
-
-
-async def source(command):
-    url = "https://github.com/Compass-Bot-Team/Compass"
-    branch = "rewrite"
-    if command == 'help':
-        src = type(bot.help_command)
-        module = src.__module__
-        filename = inspect.getsourcefile(src)
-    else:
-        obj = bot.get_command(command.replace('.', ' '))
-        src = obj.callback.__code__
-        module = obj.callback.__module__
-        filename = src.co_filename
-    lines, firstlineno = inspect.getsourcelines(src)
-    if not module.startswith('discord'):
-        location = os.path.relpath(filename).replace('\\', '/')
-    else:
-        location = module.replace('.', '/') + '.py'
-    return f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
 
 class Compass_Help(commands.HelpCommand):
@@ -141,5 +90,65 @@ class Compass_Help(commands.HelpCommand):
         await channel.send(embed=embed)
 
 
-bot.help_command = Compass_Help(command_attrs={'help': "Posts this message."})
-bot.run(bot.config["token"])
+async def run_lavalink():
+    lavalink_directory = f"{os.getcwd()}/lavalink"  # change this
+    request = f"cd {lavalink_directory} & java -jar Lavalink.jar"
+    await asyncio.create_subprocess_shell(request, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+
+
+class Compass(commands.Bot):
+    def __init__(self):
+        # Constructor
+        super().__init__(command_prefix=prefix, description="Compass is an all-in-one bot coded in discord.py.",
+                         intents=discord.Intents.all(), help_command=Compass_Help(command_attrs={'help': "Posts this message."}))
+
+        self.config = yaml.safe_load(open("config.yml"))
+        self.owner_ids = self.config["owners"]
+
+        # Cache
+        self.launch_time = datetime.datetime.utcnow()
+        self.message_num = 0
+        self.command_num = 0
+        self.message_senders = {}
+        self.guild_senders = {}
+        self.command_users = {}
+        self.command_guilds = {}
+
+        self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
+                           "cogs.fun", "cogs.images", "cogs.music", "cogs.tasks", "cogs.utilities")
+
+        # Loads cogs
+        for cog in self.cogs_tuple:
+            self.load_extension(cog)
+            useful_functions.logger.info(f"Loaded cog {cog}")
+
+        self.load_extension("jishaku")
+        useful_functions.logger.info(f"Loaded cog jishaku (outside of main folder)")
+
+    def run(self):
+        super().run(self.config["token"], reconnect=True)
+
+
+async def source(command):
+    url = "https://github.com/Compass-Bot-Team/Compass"
+    branch = "rewrite"
+    if command == 'help':
+        src = type(Compass().help_command)
+        module = src.__module__
+        filename = inspect.getsourcefile(src)
+    else:
+        obj = Compass().get_command(command.replace('.', ' '))
+        src = obj.callback.__code__
+        module = obj.callback.__module__
+        filename = src.co_filename
+    lines, firstlineno = inspect.getsourcelines(src)
+    if not module.startswith('discord'):
+        location = os.path.relpath(filename).replace('\\', '/')
+    else:
+        location = module.replace('.', '/') + '.py'
+    return f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
+
+
+loop = asyncio.get_event_loop()
+loop.create_task(run_lavalink())
+loop.create_task(Compass().run())
