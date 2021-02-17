@@ -28,15 +28,29 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         self.mystbin = mystbin.Client()
         self.cleverbot = async_cleverbot.Cleverbot(self.bot.config['travitiakey'])
 
+    async def get_chatbot_channels(self):
+        channels = []
+        async with aiosqlite.connect("storage.db") as db:
+            async with db.execute("SELECT *, rowid FROM ChatbotChannels;") as cursor:
+                while True:
+                    try:
+                        for _ in iter(int, 1):
+                            info = await cursor.fetchone()
+                            channels.append(int(info[0]))
+                    except Exception:
+                        break
+            return channels
+
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not message.guild or message.guild.id != support_server_id or message.author.bot or message.webhook_id is not None\
-                or message.channel.id != chatbot_channel_id:
+        if not message.guild or message.channel.id not in list(await self.get_chatbot_channels()) or message.author.bot or message.webhook_id is not None:
             return
-        elif len(message.content) < 3 or len(message.content) > 60:
+        if len(message.content) < 3 or len(message.content) > 60:
             await message.channel.send(embed=embeds.failembed("All messages must be above 3 and below 60 characters!", "API limitations, sowwy."))
         else:
-            await message.channel.send(embed=embeds.twoembed(f"Cleverbot's response!", await self.cleverbot.ask(str(message.content))))
+            async with message.channel.typing():
+                request = await self.cleverbot.ask(str(message.content))
+            await message.channel.send(embed=embeds.twoembed(f"My response!", request))
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -147,14 +161,33 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
     async def tts(self, ctx, *, text: commands.clean_content(use_nicknames=False, fix_channel_mentions=True)):
         await ctx.send(file=discord.File(await self.bot.loop.run_in_executor(None, executors.tts, discord.utils.escape_mentions(text)), filename="tts.mp3"))
 
-    @commands.command(help="Communicates with cleverbot.")
+    @commands.group(help="Communicates with cleverbot.", invoke_without_command=True)
     async def chat(self, ctx, *, content: commands.clean_content(use_nicknames=False, fix_channel_mentions=True)):
+        if content == f"{ctx.prefix}chat setup":
+            return
         if len(content) < 3 or len(content) > 60:
             await ctx.send(embed=embeds.failembed("All messages must be above 3 and below 60 characters!",
                                                   "API limitations, sowwy."))
         else:
             chatbot = await self.cleverbot.ask(discord.utils.escape_mentions(str(content)))
-            await ctx.send(embed=embeds.twoembed(f"Response!", chatbot))
+            await ctx.send(embed=embeds.twoembed(f"My response!", chatbot))
+
+    @commands.has_permissions(manage_guild=True)
+    @chat.command(help="Adds or removes a chatbot channel. You can specify a channel but if you don't it defaults to the current channel")
+    async def setup(self, ctx, *, channel: discord.TextChannel = None):
+        if channel is None:
+            channel = ctx.channel
+        channels = await self.get_chatbot_channels()
+        if channel.id in channels:
+            query = f"""DELETE FROM ChatbotChannels WHERE channel = "{channel.id}";"""
+            returned = f"Deleted #{channel.name} from the database."
+        else:
+            query = f"""INSERT INTO ChatbotChannels VALUES ("{channel.id}");"""
+            returned = f"Added #{channel.name} to the database."
+        async with aiosqlite.connect("storage.db") as db:
+            await db.execute(query)
+            await db.commit()
+        await ctx.send(embed=embeds.twoembed("Success!", returned))
 
     @commands.group(invoke_without_command=True, help="Says something.")
     async def say(self, ctx, *, content: commands.clean_content(use_nicknames=False, fix_channel_mentions=True)):
