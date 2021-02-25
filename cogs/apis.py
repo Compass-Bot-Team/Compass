@@ -10,7 +10,9 @@ import io
 import discord
 import sr_api
 import cse
-from utils import embeds, hurricane_generator
+import re
+from cogs.error_handling import error_handle
+from utils import embeds, hurricane_generator, useful_functions
 from discord.ext import commands
 
 
@@ -27,13 +29,11 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
     @commands.command()
     async def google(self, ctx, *, arg):
         results = await self.engine.search(f"{arg}")
-        if results[0].snippet is not None:
-            snippet = str(results[0].snippet)
-        else:
-            snippet = "No snippet available."
+        if results[0].snippet is None:
+            results[0].snippet = "No snippet available."
         embed = embeds.twoembed(results[0].title,
-                                snippet)
-        embed.add_field(name="URL", value=results[0].link, inline=True)
+                                results[0].snippet)
+        embed.url = results[0].link
         embed.set_image(url=f"{results[0].image}")
         await ctx.send(embed=embed)
 
@@ -42,6 +42,8 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
         if isinstance(error, KeyError):
             return await ctx.send(embed=embeds.failembed("No results!",
                                                          "Try searching something else."))
+        else:
+            await error_handle(self.bot, error, ctx)
 
     @commands.command(help="Posts a cat.")
     async def cat(self, ctx):
@@ -63,9 +65,10 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
 
     @commands.command(help="Posts the status of Discord.")
     async def discordstatus(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get("https://srhpyqt94yxb.statuspage.io/api/v2/incidents.json") as page:
                 json = await page.json()
+        await session.close()
         incident = json['incidents'][0]
         embed = embeds.twoembed(incident['name'] + " | " + incident['impact'], incident['incident_updates'][0]['body'],
                                 timestamp=False)
@@ -90,9 +93,10 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
         else:
             raise commands.BadArgument("This basin isn't in the list of basins.")
         params = {"rss_url": "https://www.nhc.noaa.gov/gtwo.xml"}
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get("https://api.rss2json.com/v1/api.json", params=params) as website:
                 api = await website.json()
+        await session.close()
         grabbed_basin = api["items"][number]
         embed = embeds.twoembed(grabbed_basin["title"], grabbed_basin["description"], timestamp=False)
         embed.set_thumbnail(url=api["feed"]["image"])
@@ -102,31 +106,34 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
 
     @commands.command(help="Posts the stupidest things to come from Donald J. Trump")
     async def trump(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get('https://api.tronalddump.io/random/quote') as r:
                 res = await r.json()
-            embed = embeds.twoembed("Your Trump quote!",
-                                    res['value'])
-            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/777248921205866546/797288910282948608/kUuht00m.png")
-            await ctx.send(embed=embed)
+        await session.close()
+        embed = embeds.twoembed("Your Trump quote!",
+                                res['value'])
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/777248921205866546/797288910282948608/kUuht00m.png")
+        await ctx.send(embed=embed)
 
     @commands.command(help="Posts the NASA image of the day.", aliases=['nasa'])
     async def space(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get(f"https://api.nasa.gov/planetary/apod?api_key={self.bot.config['nasakey']}") as nasa_raw:
                 nasa_json = await nasa_raw.json()
-            embed = embeds.twoembed(nasa_json['title'],
-                                    nasa_json['explanation'])
-            if 'copyright' in nasa_json:
-                embed.add_field(name="Copyright", value=nasa_json['copyright'], inline=True)
-            embed.set_image(url=nasa_json['hdurl'])
-            await ctx.send(embed=embed)
+        await session.close()
+        embed = embeds.twoembed(nasa_json['title'],
+                                nasa_json['explanation'])
+        if 'copyright' in nasa_json:
+            embed.add_field(name="Copyright", value=nasa_json['copyright'], inline=True)
+        embed.set_image(url=nasa_json['hdurl'])
+        await ctx.send(embed=embed)
 
     @commands.command(help="Posts the current location of the ISS (International Space Station.)", aliases=['internationalspacestation'])
     async def iss(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get("http://api.open-notify.org/iss-now") as raw:
                 iss_info = await raw.json()
+        await session.close()
         embed = embeds.twoembed("Location of the International Space Station!",
                                 "Up, up and away.")
         embed.add_field(name="Longitude", value=iss_info['iss_position']['longitude'], inline=True)
@@ -135,9 +142,10 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
 
     @commands.command(help="Responds with yes or no or maybe even maybe.")
     async def yesorno(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get(f"https://yesno.wtf/api") as rawversion:
                 yes_or_no_api = await rawversion.json()
+        await session.close()
         if yes_or_no_api['answer'] == "yes":
             emoji = self.bot.get_emoji(797916243281707008)
         elif yes_or_no_api['answer'] == "no":
@@ -162,21 +170,23 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
 
     @commands.command(help="Posts a random image from [inspirobot.](https://inspirobot.me/)")
     async def inspirobot(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get(f"https://inspirobot.me/api?generate=true") as inspirobotraw:
                 url = (str(await inspirobotraw.read()).split("'"))[1]
-            embed = embeds.imgembed("An inspirational quote!", url, url)
-            await ctx.send(embed=embed)
+        await session.close()
+        embed = embeds.imgembed("An inspirational quote!", url, url)
+        await ctx.send(embed=embed)
 
     @commands.command(help="Posts the definition and example for a search term on Urban Dictionary.")
     async def urban(self, ctx, *, term: str):
         headers = {"x-rapidapi-key": self.bot.config["urbankey"],
                    "x-rapidapi-host": "mashape-community-urban-dictionary.p.rapidapi.com"}
         async with ctx.channel.typing():
-            async with aiohttp.ClientSession(headers=headers) as session:
+            async with aiohttp.ClientSession(loop=self.bot.loop, headers=headers) as session:
                 async with session.get("https://mashape-community-urban-dictionary.p.rapidapi.com/define",
                                        params={"term": term}) as thing:
                     response = await thing.json()
+            await session.close()
         definition = response["list"][0]
         embed = embeds.twoembed(f"Definition for {term} on Urban Dictionary!",
                                 definition["definition"].replace(r"\n", "\n").replace(r"\r", "\n"))
@@ -186,27 +196,28 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
 
     @commands.command(help="Posts weather information for a given location.")
     async def weather(self, ctx, *, city: str):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get(f"http://api.openweathermap.org/data/2.5/weather?appid={self.bot.config['weatherapikey']}&q={city}") as r:
                 x = await r.json()
-        if x["cod"] != "404":
-            embed = embeds.twoembed(f"{city}'s weather!",
-                                    f"{str(x['weather'][0]['description'])}\n"
-                                    f"Humidity: {x['main']['humidity']}\n"
-                                    f"Temperature (Celsius): {str(round(x['main']['temp'] - 273.15))}\n"
-                                    f"Temperature (Fahrenheit): {str(round((round(x['main']['temp'] - 273.15) * 9 / 5) + 32))}\n "
-                                    f"Pressure: {x['main']['pressure']}\n")
-            await ctx.send(embed=embed)
-        else:
+        await session.close()
+        if x["cod"] == "404":
             raise commands.BadArgument(f"{city} doesn't exist!")
+        embed = embeds.twoembed(f"{city}'s weather!",
+                                f"{str(x['weather'][0]['description'])}\n"
+                                f"Humidity: {x['main']['humidity']}\n"
+                                f"Temperature (Celsius): {str(round(x['main']['temp'] - 273.15))}\n"
+                                f"Temperature (Fahrenheit): {str(round((round(x['main']['temp'] - 273.15) * 9 / 5) + 32))}\n "
+                                f"Pressure: {x['main']['pressure']}\n")
+        await ctx.send(embed=embed)
 
     @commands.command(help="Posts a random Taylor Swift quote.")
     async def taylor(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get(f"https://api.taylor.rest") as taylorquoteraw:
                 taylorquoteget = await taylorquoteraw.json()
             async with session.get(f"https://api.taylor.rest/image") as imageraw:
                 imagegrab = await imageraw.json()
+        await session.close()
         embed = embeds.twoembed("Your Taylor Swift quote!",
                                 taylorquoteget['quote'])
         embed.set_thumbnail(url=imagegrab['url'])
@@ -214,12 +225,39 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
 
     @commands.command(help="Posts a quote from Kanye West.")
     async def kanye(self, ctx):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(loop=self.bot.loop) as session:
             async with session.get('https://api.kanye.rest') as r:
-                res = await r.json()
-            embed = embeds.twoembed("Your Kanye quote!",
-                                    res['quote'])
-            await ctx.send(embed=embed)
+                embed = embeds.twoembed("Your Kanye quote!",
+                                        (await r.json())['quote'])
+        await session.close()
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Gets information on COVID-19 (Coronavirus.)")
+    async def covid(self, ctx, *, location: str):
+        if location in useful_functions.states:
+            endpoint = "states"
+            if location in ["GA", "gA", "Ga", "ga"]:
+                location = "Georgia"
+        else:
+            endpoint = "countries"
+        params = {"yesterday": "true", "strict": "true", "query": "true"}
+        constructed_endpoint = f"https://corona.lmao.ninja/v2/{endpoint}/{location}"
+        embed = discord.Embed(title=f"COVID stats for {location.title()}!",
+                              url=constructed_endpoint.replace(" ", "%20"),
+                              color=self.bot.base_color)
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession(loop=self.bot.loop) as session:
+                async with session.get(constructed_endpoint, params=params) as api:
+                    jsonified = await api.json()
+            await session.close()
+            fields = ["cases", "todayCases", "deaths", "todayDeaths", "recovered", "todayRecovered", "active",
+                      "critical", "casesPerOneMillion", "deathsPerOneMillion", "tests", "testsPerOneMillion",
+                      "oneCasePerPeople", "oneDeathPerPeople", "oneTestPerPeople", "activePerOneMillion",
+                      "recoveredPerOneMillion", "criticalPerOneMillion"]
+            [embed.add_field(name=str((re.sub(r"(?<=\w)([A-Z])", r" \1", field)).title()), value=f"{jsonified[field]:,}", inline=True) for field in fields if field in jsonified]
+            if "flag" in jsonified["countryInfo"]:
+                embed.set_thumbnail(url=jsonified["countryInfo"]["flag"])
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

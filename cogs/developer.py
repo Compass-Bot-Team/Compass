@@ -5,7 +5,6 @@
 import os
 import asyncio
 import aiosqlite
-import aiohttp
 from utils import useful_functions, embeds
 from discord.ext import commands
 
@@ -42,7 +41,7 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
                 execute = await db.execute(command)
                 await db.commit()
             result = await execute.fetchall()
-            await ctx.send(result)
+        await ctx.send(result)
 
     @sql.error
     async def sql_error(self, ctx, error):

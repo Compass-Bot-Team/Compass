@@ -14,12 +14,7 @@ from discord.ext import commands, tasks
 class Tasks(commands.Cog, description='Some tasks loops to keep the bot up and running.'):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.last_status_at = None
-        self.bot.status = None
         self.bot.midnight = datetime.time(hour=0)
-        self.bot.loop.create_task(self.status())
-        self.bot.loop.create_task(self.pur())
-        self.bot.loop.create_task(self.cleanse_dict())
 
     async def cleanse_dict(self):
         await self.bot.wait_until_ready()
@@ -33,24 +28,25 @@ class Tasks(commands.Cog, description='Some tasks loops to keep the bot up and r
 
     async def pur(self):
         while True:
-            if len([x[0]['message'] for x in pur.update_requirements(input_file='requirements.txt').values()]) != 0:
-                useful_functions.logger.info(str([x[0]['message'] for x in pur.update_requirements(input_file='requirements.txt').values()]))
+            changes_to_requirements = [x[0]['message'] for x in pur.update_requirements(input_file='requirements.txt').values()]
+            if len(changes_to_requirements) != 0:
+                useful_functions.logger.info(str(changes_to_requirements))
             await asyncio.sleep(60)
 
+    @tasks.loop(minutes=5)
     async def status(self):
-        await self.bot.wait_until_ready()
-        while True:
-            if (datetime.datetime.utcnow()-self.bot.last_status_at).minutes < 5 or self.bot.last_status_at is None:
-                async with aiosqlite.connect('storage.db') as db:
-                    async with db.execute("SELECT * FROM Statuses ORDER BY RANDOM() LIMIT 1;") as cursor:
-                        status = (await cursor.fetchone())[0]
-                if status != self.bot.status:
-                    await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                                             name=f"{status} - {len(self.bot.guilds):,} servers and {len(self.bot.users):,} members!"))
-                    useful_functions.logger.info(f"New status: {status}")
-                    self.bot.status = status
-                self.bot.last_status_at = datetime.datetime.utcnow()
-            await asyncio.sleep(30)
+        async with aiosqlite.connect('storage.db') as db:
+            async with db.execute("SELECT * FROM Statuses ORDER BY RANDOM() LIMIT 1;") as cursor:
+                status = (await cursor.fetchone())[0]
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+                                                                 name=status))
+        useful_functions.logger.info(f"New status: {status}")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.status.start()
+        self.bot.loop.create_task(self.cleanse_dict())
+        self.bot.loop.create_task(self.pur())
 
 
 def setup(bot):

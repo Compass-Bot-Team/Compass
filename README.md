@@ -8,8 +8,8 @@ Compass is an all-in-one bot coded in Python using [discord.py.](https://github.
 If you want to setup the bot, [just invite it, there is no reason to set it up yourself.](https://discord.com/oauth2/authorize?client_id=769308147662979122&permissions=2147352567&scope=bot)
 ## Licensing
 If you edited any code before commit [69237f5e1fc9aac3b9bb0162144e78f56e11014d](https://github.com/Compass-Bot-Team/Compass/commit/69237f5e1fc9aac3b9bb0162144e78f56e11014d) was pushed to the main repo at 9:02 PM EST on January 21, 2021 it's not licensed.
+Anything editing after that date and before February 16, 2021 is licensed under the MIT license.
 The code was switched to MPL on February 16, 2021.
-Anything editing after that date is licensed under the MIT license.
 ## Credits
 - The [TBKBot Team](https://github.com/TBKBot) for teaching me programming and being dumb (also I stole their wait for)
 - [Anto](https://github.com/antoniokf5) for designing the bot's logo and helping me out with a few commands

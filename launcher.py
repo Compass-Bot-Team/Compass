@@ -23,7 +23,7 @@ os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
 
 
-class Compass_Help(commands.HelpCommand):
+class CompassHelp(commands.HelpCommand):
     def get_command_signature(self, command):
         returned = command.qualified_name
         if command.aliases:
@@ -53,10 +53,8 @@ class Compass_Help(commands.HelpCommand):
             subcommands = ""
             if group.commands:
                 for subcommand in group.commands:
-                    if subcommand_count == 0:
-                        subcommands += f"``{subcommand}``"
-                    else:
-                        subcommands += f", ``{subcommand}``"
+                    if subcommand_count != 0: subcommands += ", "
+                    subcommands += f"``{subcommand}``"
                     subcommand_count += 1
                 embed.add_field(name="Subcommands", value=subcommands)
         await channel.send(embed=embed)
@@ -67,26 +65,17 @@ class Compass_Help(commands.HelpCommand):
         await channel.send(embed=embed)
 
     async def send_bot_help(self, mapping):
-        embed = discord.Embed(title="Compass Help!", color=0x202225, timestamp=datetime.datetime.utcnow())
         channel = self.get_destination()
+        embed = embeds.twoembed(f"Compass help!", f"The used prefix was {self.clean_prefix}.")
         async with channel.typing():
             for cog, commands in mapping.items():
-                command_amount = 0
                 filtered = await self.filter_commands(commands, sort=True)
                 command_signatures = [self.get_command_signature(c) for c in filtered]
                 if command_signatures:
                     cog_name = getattr(cog, "qualified_name", "Other")
-                    if cog_name != "Other":
-                        _commands = ""
-                        for command in command_signatures:
-                            if command_amount == 0:
-                                _commands += f"``{str(command)}``"
-                            else:
-                                _commands += f", ``{str(command)}``"
-                            command_amount += 1
-                        embed.add_field(name=cog_name,
-                                        value=_commands,
-                                        inline=False)
+                    embed.add_field(name=cog_name,
+                                    value=str(list(f"``{str(command)}``" for command in command_signatures)).replace("[", "").replace("]", "").replace("'`", "").replace("`'", "`"),
+                                    inline=False)
         await channel.send(embed=embed)
 
 
@@ -99,11 +88,15 @@ async def run_lavalink():
 class Compass(commands.Bot):
     def __init__(self):
         # Constructor
-        super().__init__(command_prefix=prefix, description="Compass is an all-in-one bot coded in discord.py.",
-                         intents=discord.Intents.all(), help_command=Compass_Help(command_attrs={'help': "Posts this message."}))
+        parameters = {"command_prefix": prefix,
+                      "intents": discord.Intents.all(),
+                      "description": "Compass is an all-in-one bot coded in discord.py.",
+                      "help_command": CompassHelp(command_attrs={'help': "Posts this message."})}
+        super().__init__(**parameters)
 
         self.config = yaml.safe_load(open("config.yml"))
         self.owner_ids = self.config["owners"]
+        self.base_color = 0x202225
 
         # Cache
         self.launch_time = datetime.datetime.utcnow()
@@ -115,7 +108,8 @@ class Compass(commands.Bot):
         self.command_guilds = {}
 
         self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
-                           "cogs.fun", "cogs.images", "cogs.music", "cogs.tasks", "cogs.utilities")
+                           "cogs.fun", "cogs.images", "cogs.minecraft", "cogs.music", "cogs.tasks",
+                           "cogs.utilities")
 
         # Loads cogs
         for cog in self.cogs_tuple:
@@ -126,12 +120,11 @@ class Compass(commands.Bot):
         useful_functions.logger.info(f"Loaded cog jishaku (outside of main folder)")
 
     def run(self):
-        super().run(self.config["token"], reconnect=True)
+        super().run(self.config["token"])
 
 
 async def source(command):
-    url = "https://github.com/Compass-Bot-Team/Compass"
-    branch = "rewrite"
+    url = "https://github.com/Compass-Bot-Team/Compass/blob/rewrite"
     if command == 'help':
         src = type(Compass().help_command)
         module = src.__module__
@@ -146,7 +139,7 @@ async def source(command):
         location = os.path.relpath(filename).replace('\\', '/')
     else:
         location = module.replace('.', '/') + '.py'
-    return f'{url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
+    return f'{url}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
 
 loop = asyncio.get_event_loop()

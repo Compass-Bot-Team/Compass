@@ -67,9 +67,12 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
     async def on_message(self, message):
         # just helping friends pls ignore this
         people = [574984194024013825, 210958048691224576]
-        swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fuck", "shitted", "shitting", "fucker",
+        swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fucker", "shitted", "shitting", "fucker",
                   "motherfucker", "dogshit", "bullshit", "ass", "faggot", "goddamn", "fag"]
-        if message.author.id in people and message.content in swears:
+        alt_lists = list(f"{swear}." for swear in swears) + list(f"{swear}," for swear in swears) + list(f"{swear}!" for swear in swears) + list(f"{swear}?" for swear in swears) + list(f"{swear}s" for swear in swears)
+    #    for swear in alt_lists:
+    #        alt_lists += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in swear))))
+        if message.author.id in people and message.content in alt_lists:
             await message.channel.send(f"<@{message.author.id}> STOP SWEARING <:TBK_witheredwojak:742475096366776370>")
         # ok now this is actually cache stuff below this line
         if message.author.bot or message.webhook_id is not None:
@@ -108,11 +111,14 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
                                 f"Uptime: {await useful_functions.uptime(self.bot)}\n")
         embed.url = "https://www.github.com/Compass-Bot-Team/Compass"
         embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
-        embed.add_field(name="Top Bot Users", value=f"{await useful_functions.users(self.bot)}", inline=True)
-        embed.add_field(name="Top No-Lifers", value=f"{await useful_functions.noliferusers(self.bot)}", inline=True)
-        embed.add_field(name="Top Guild Bot Users", value=f"{await useful_functions.guilds(self.bot)}", inline=False)
-        embed.add_field(name="Top Guild No-Lifers", value=f"{await useful_functions.noliferguilds(self.bot)}", inline=False)
-
+        stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
+                        await useful_functions.noliferusers(self.bot): "Top No-Lifers"}
+        non_inline_stats_fields = {await useful_functions.guilds(self.bot): "Top Server Bot Users",
+                                   await useful_functions.noliferguilds(self.bot): "Top Guild No-Lifers"}
+        [embed.add_field(name=stats_fields[field], value=field, inline=True)
+         for field in stats_fields if field is not None]
+        [embed.add_field(name=non_inline_stats_fields[field], value=field, inline=False)
+         for field in non_inline_stats_fields if field is not None]
         embed.add_field(name="Stats", value=f"Cogs: {len(self.bot.cogs):,} ({await useful_functions.cogs(self.bot)})\n"
                                             f"Commands: {self.bot.command_num:,}\n"
                                             f"Messages: {self.bot.message_num:,}\n"

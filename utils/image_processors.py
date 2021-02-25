@@ -3,11 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
+from utils import exceptions
 from PIL import Image, ImageFilter
-
-
-class ImageExceedsLimit(Exception):
-    pass
 
 
 def blur_processor(image_bytes):
@@ -31,7 +28,7 @@ def enlarge_processor(image_bytes):
         buffer = io.BytesIO()
         width, height = img.size
         if width > 5000 or height > 5000:
-            raise ImageExceedsLimit("This image's height or width is too large.")
+            raise exceptions.ImageExceedsLimit("This image's height or width is too large.")
         else:
             img.resize((round(width * 1.25), round(height * 1.25))).save(buffer, "png")
             buffer.seek(0)

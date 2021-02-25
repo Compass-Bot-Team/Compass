@@ -7,7 +7,7 @@ import traceback
 import discord
 import asyncio
 from discord.ext import commands
-from utils.image_processors import ImageExceedsLimit
+from utils import exceptions
 from utils.useful_functions import gist_maker
 from utils.embeds import failembed
 
@@ -40,8 +40,8 @@ async def error_handle(bot, error, ctx):
         return await ctx.send(embed=failembed(error, "Try again with someone else!"))
     if isinstance(error, commands.MissingPermissions):
         return await ctx.send(embed=failembed("I don't have perms or I was hierarchy'd.", "Give me permissions pwease!"))
-    if isinstance(error, ImageExceedsLimit):
-        return await ctx.send(embed=failembed("This image was too large!", error))
+    if isinstance(error, exceptions.ImageManipulationError):
+        return await ctx.send(embed=failembed("Error in image manipulation!", error))
     bad_arguments = (commands.BadArgument, commands.BadUnionArgument, commands.BadBoolArgument, commands.BadColourArgument, commands.BadInviteArgument)
     if isinstance(error, bad_arguments):
         return await ctx.send(embed=failembed("Bad argument!", error))
@@ -66,7 +66,6 @@ async def error_handle(bot, error, ctx):
 class ErrorHandling(commands.Cog, name='Error Handling', description='The error handling cog for Compass.'):
     def __init__(self, bot):
         self.bot = bot
-        self.token = bot.config["githubkey"]
 
     @commands.Cog.listener('on_command_error')
     async def error_handling(self, ctx, error):

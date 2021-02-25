@@ -284,6 +284,7 @@ __pycache__/objectfile.cpython-38.pyc
 src/
 lavalink/
 config.yml
+config.py
 databases/bank.json
 .idea
 tts.mp3
