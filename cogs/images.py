@@ -314,10 +314,6 @@ class Images(commands.Cog, description='The bucket load of image manipulation.')
         embed.set_image(url=f"attachment://wasted.gif")
         await ctx.send(embed=embed, file=file)
 
-    def cog_unload(self):
-        self.task.cancel()
-        session.close()
-
 
 def setup(bot):
     bot.add_cog(Images(bot))
