@@ -1,7 +1,11 @@
 language: python
-python:
-  - "3.8"
-  - "3.9"
-cache: pip
-install:
-  - pip install -r requirements.txt
+jobs:
+  include:
+    - name: "Run on Windows"
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version 3.8.0
+        - python -m pip install --upgrade pip
+install: pip3 install --upgrade pip
+script: python3 launcher.py
