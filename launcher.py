@@ -71,11 +71,17 @@ class CompassHelp(commands.HelpCommand):
             for cog, commands in mapping.items():
                 filtered = await self.filter_commands(commands, sort=True)
                 command_signatures = [self.get_command_signature(c) for c in filtered]
+                command_count = 0
+                commands_registered = ""
                 if command_signatures:
+                    for command in command_signatures:
+                        if command_count == 0:
+                            commands_registered += f"``{command}``"
+                        else:
+                            commands_registered += f", ``{command}``"
+                        command_count += 1
                     cog_name = getattr(cog, "qualified_name", "Other")
-                    embed.add_field(name=cog_name,
-                                    value=str(list(f"``{str(command)}``" for command in command_signatures)).replace("[", "").replace("]", "").replace("'`", "").replace("`'", "`"),
-                                    inline=False)
+                    embed.add_field(name=cog_name, value=commands_registered, inline=False)
         await channel.send(embed=embed)
 
 
@@ -108,8 +114,8 @@ class Compass(commands.Bot):
         self.command_guilds = {}
 
         self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
-                           "cogs.fun", "cogs.images", "cogs.minecraft", "cogs.music", "cogs.tasks",
-                           "cogs.utilities")
+                           "cogs.fun", "cogs.images", "cogs.minecraft", "cogs.moderation",
+                           "cogs.music", "cogs.tasks", "cogs.utilities")
 
         # Loads cogs
         for cog in self.cogs_tuple:

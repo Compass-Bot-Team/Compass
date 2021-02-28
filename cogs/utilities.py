@@ -112,13 +112,15 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         embed.url = "https://www.github.com/Compass-Bot-Team/Compass"
         embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
         stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
-                        await useful_functions.noliferusers(self.bot): "Top No-Lifers"}
-        non_inline_stats_fields = {await useful_functions.guilds(self.bot): "Top Server Bot Users",
-                                   await useful_functions.noliferguilds(self.bot): "Top Guild No-Lifers"}
-        [embed.add_field(name=stats_fields[field], value=field, inline=True)
-         for field in stats_fields if field is not None]
-        [embed.add_field(name=non_inline_stats_fields[field], value=field, inline=False)
-         for field in non_inline_stats_fields if field is not None]
+                        await useful_functions.noliferusers(self.bot): "Top No Lifers",
+                        await useful_functions.guilds(self.bot): "Top Server Bot Users",
+                        await useful_functions.noliferguilds(self.bot): "Top Server No Lifers"}
+        field_inline_status = [True, True, False, False]
+        field_count = 0
+        for field in stats_fields:
+            if field is not None:
+                embed.add_field(name=stats_fields[field], value=field, inline=field_inline_status[field_count])
+            field_count += 1
         embed.add_field(name="Stats", value=f"Cogs: {len(self.bot.cogs):,} ({await useful_functions.cogs(self.bot)})\n"
                                             f"Commands: {self.bot.command_num:,}\n"
                                             f"Messages: {self.bot.message_num:,}\n"

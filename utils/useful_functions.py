@@ -118,9 +118,12 @@ async def prefix(bot, message):
     return commands.when_mentioned_or(str(prefix))(bot, message)
 
 
-async def gist_maker(token, description, file_name, file_content):
+async def gist_maker(token, description, file_name, file_content, file_type="MD"):
+    content = file_content
+    if file_type == "MD":
+        content = str(f"```python\n{file_content}\n```")
     _json_data = {"description": description,
-                  "files": {f"{str(file_name)}.MD": {"content": str(f"```python\n{file_content}\n```")}},
+                  "files": {f"{str(file_name)}.{file_type}": {"content": content}},
                   "public": False}
     headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
     async with aiohttp.ClientSession(headers=headers) as session:

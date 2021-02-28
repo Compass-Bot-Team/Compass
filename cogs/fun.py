@@ -10,6 +10,7 @@ import datetime
 import random
 import aiosqlite
 import asyncio
+from .error_handling import error_handle
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
 
@@ -22,6 +23,7 @@ chatbot_channel_id = 801971149285883955
 class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
     def __init__(self, bot):
         self.bot = bot
+        self.member_not_found_triggers = (TypeError, AttributeError)
         self.token = bot.config["githubkey"]
         self.bot.snipe = {}
         self.bot.editsnipe = {}
@@ -369,23 +371,83 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
                         "3", "Scissors")
                     if f"{ai_move} {human_move}" in ["Rock Paper", "Paper Scissors", "Scissors Rock"]:
                         status = "you won!"
-                    if f"{ai_move} {human_move}" in ["Paper Rock", "Scissors Paper", "Rock Scissors"]:
+                    elif f"{ai_move} {human_move}" in ["Paper Rock", "Scissors Paper", "Rock Scissors"]:
                         status = "you lost."
-                    if f"{ai_move} {human_move}" in ["Rock Rock", "Paper Paper", "Scissors Scissors"]:
+                    elif f"{ai_move} {human_move}" in ["Rock Rock", "Paper Paper", "Scissors Scissors"]:
                         status = "there was a draw, oops."
                     await ctx.send(embed=embeds.twoembed(f"{ctx.author}, {status}",
                                                          f"The AI played: {ai_move}\n"
                                                          f"You played: {human_move}"))
 
-    @commands.command(
-        help="Posts a random string. You can also provide a string that will be randomized if you would like.")
-    async def randomstring(self, ctx, *, input: typing.Union[str] = None):
-        if input is None:
-            input = 'abcdefghijklmnopqrstuvwxyz1234567890'
-        string_list = ""
-        for _ in range(random.randint(1, len(input))):
-            string_list += str(random.choice(input))
+    @commands.command(help="Posts a random string. You can also provide a string that will be randomized if you would like.")
+    async def randomstring(self, ctx, *, string: typing.Union[str] = None):
+        if string is None:
+            string = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        string_list = [str(random.choice(string)) for _ in range(random.randint(1, len(string)))]
         await ctx.send(string_list)
+
+    async def find(self, user1, user2):
+        async with aiosqlite.connect("storage.db") as connection:
+            try:
+                await connection.execute(f"""SELECT * FROM Notes WHERE user1 = "{user1.id}" AND user2 = "{user2.id}";""")
+            except Exception:
+                return False
+            else:
+                return True
+
+    @commands.group(name="note", aliases=["notes"], help="The base group for adding, removing, or showing notes on a user. If you want to show a note, just type the group name followed by a user.", invoke_without_command=True)
+    async def _note(self, ctx, user: checks.UserSearcher, *, note: commands.clean_content(escape_markdown=True, fix_channel_mentions=True, use_nicknames=True) = None):
+        if note is None:
+            async with aiosqlite.connect("storage.db") as connection:
+                async with connection.execute(f"""SELECT * FROM Notes WHERE user1 = "{ctx.author.id}" AND """
+                                              f"""user2 = "{user.id}";""") as cursor:
+                    info = await cursor.fetchone()
+                    note = info[0]
+                    time = datetime.datetime.strptime(info[1], "%Y-%m-%d %H:%M:%S")
+            embed = embeds.twoembed(f"Your note on {user}!",
+                                    note, timestamp=False)
+            embed.timestamp = time
+            await ctx.send(embed=embed)
+        else:
+            if await self.find(ctx.author, user) is True:
+                raise commands.BadArgument(f"There is a note on {user}! Delete this note before adding one.")
+            else:
+                time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                async with aiosqlite.connect("storage.db") as connection:
+                    await connection.execute(f"""INSERT INTO Notes VALUES ("{note}", "{time}", "{ctx.author.id}", "{user.id}");""")
+                    await connection.commit()
+                await ctx.send("Success!")
+
+    @_note.command(help="Edits a note.")
+    async def edit(self, ctx, user: checks.UserSearcher, *, note: commands.clean_content(escape_markdown=True, fix_channel_mentions=True, use_nicknames=True)):
+        if await self.find(ctx.author, user) is False:
+            raise commands.BadArgument(f"There is no note on {user}! Add a note before editing.")
+        else:
+            async with aiosqlite.connect("storage.db") as connection:
+                await connection.execute(f"""UPDATE Notes SET note = "{note}" WHERE user1 = "{ctx.author.id}" AND user2 = "{user.id}";""")
+                await connection.commit()
+            await ctx.send("Success!")
+
+    @commands.command(help="Roll with added modifiers.")
+    async def megaroll(self, ctx, argument: str, *, modifiers: str = None):
+        argument = [int(arg) for arg in argument.split("d")]
+        result = random.randint(argument[0], argument[1])
+        if modifiers is not None:
+            if modifiers.startswith("-"):
+                modifiers.strip("-")
+                calculation = result-int(modifiers)
+            elif modifiers.startswith("+"):
+                modifiers.strip("+")
+                calculation = result + int(modifiers)
+            elif modifiers.startswith("+"):
+                modifiers.strip("/")
+                calculation = result/int(modifiers)
+            elif modifiers.startswith("*"):
+                modifiers.strip("*")
+                calculation = result+int(modifiers)
+            await ctx.send(f"{calculation} (Originally {result})")
+        else:
+            await ctx.send(result)
 
 
 def setup(bot):

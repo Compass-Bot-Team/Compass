@@ -10,44 +10,82 @@ config = yaml.safe_load(open("config.yml"))
 
 
 class UserSearcher(commands.Converter):
-    def get_member(self, ctx, query=None, glb=False):
-        if not query:
-            return ctx.author
+    async def convert(self, ctx, argument):
+        if ctx.guild is None:
+            raise commands.BadArgument("This command does not work in DMs!")
+        glb = True
         ret = None
-        if query.startswith("<@"):
-            query = query.strip("<@!>")  # mention strip
-        if query.isdigit() and len(query) >= 15:
-            ret = ctx.guild.get_member(int(query))  # id
+        if argument.startswith("<@"):
+            argument = argument.strip("<@!>")  # mention strip
+        if argument.isdigit() and len(argument) >= 15:
+            ret = ctx.guild.get_member(int(argument))  # id
         if ret is not None:
             return ret
-        if "#" in query:
-            ret = discord.utils.find(lambda m: f"{m.name}#{m.discriminator}".lower() == query.lower(),
+        elif "#" in argument:
+            ret = discord.utils.find(lambda m: f"{m.name}#{m.discriminator}".lower() == argument.lower(),
                                      ctx.guild.members)  # name#discrim
         if ret is not None:
             return ret
-        ret = discord.utils.find(lambda m: m.name.lower() == query.lower(), ctx.guild.members)  # name
+        else:
+            ret = discord.utils.find(lambda m: m.name.lower() == argument.lower(), ctx.guild.members)  # name
         if ret is not None:
             return ret
-        ret = discord.utils.find(lambda m: m.display_name.lower() == query.lower(), ctx.guild.members)  # nickname
+        else:
+            ret = discord.utils.find(lambda m: m.display_name.lower() == argument.lower(),
+                                     ctx.guild.members)  # nickname
         if ret is not None:
             return ret
         if glb:
-            if "#" in query:
-                ret = discord.utils.find(lambda m: str(m).lower() == query.lower(), ctx.bot.users)
+            if "#" in argument:
+                ret = discord.utils.find(lambda m: str(m).lower() == argument.lower(), ctx.bot.users)
+            if ret is not None:
+                return ret
             else:
-                query = query.strip("<@!>")
-                if query.isdigit() and len(query) >= 15:
-                    ret = ctx.bot.get_user(int(query))
+                argument = argument.strip("<@!>")
+                if argument.isdigit() and len(argument) >= 15:
+                    ret = ctx.bot.get_user(int(argument))
                 else:
                     ret = None
             if ret is not None:
                 return ret
-        return None
+        raise commands.MemberNotFound(argument)
+
+
+class ModerationUserSearcher(commands.Converter):
+    async def convert(self, ctx, argument):
+        if argument.startswith("<@"):
+            argument = argument.strip("<@!>")
+        try:
+            arg = int(argument)
+        except ValueError:
+            raise commands.MemberNotFound(argument)
+        else:
+            return arg
+
+
+class UserSearcherNoNames(commands.Converter):
+    async def convert(self, ctx, argument):
+        if ctx.guild is None:
+            raise commands.BadArgument("This command does not work in DMs!")
+        ret = None
+        if argument.startswith("<@"):
+            argument = argument.strip("<@!>")  # mention strip
+        if argument.isdigit() and len(argument) >= 15:
+            ret = ctx.guild.get_member(int(argument))  # id
+        else:
+            ret = None
+        if ret is not None:
+            if ret is not ctx.author:
+                return ret
+            else:
+                raise commands.BadArgument("You can't do mod actions against yourself!")
+        raise commands.MemberNotFound(argument)
 
 
 def antolib():
     def predicate(ctx):
         return ctx.guild.id == 738530998001860629
+
     return commands.check(predicate)
 
 
@@ -63,6 +101,7 @@ def has_admin():
             return True
         else:
             return False
+
     return commands.check(predicate)
 
 
@@ -78,4 +117,5 @@ def meme_quote_perms():
             return True
         else:
             return False
+
     return commands.check(predicate)
