@@ -114,8 +114,7 @@ class Compass(commands.Bot):
         self.command_guilds = {}
 
         self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
-                           "cogs.fun", "cogs.images", "cogs.minecraft", "cogs.moderation",
-                           "cogs.music", "cogs.tasks", "cogs.utilities")
+                           "cogs.fun", "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities")
 
         # Loads cogs
         for cog in self.cogs_tuple:

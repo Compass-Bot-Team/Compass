@@ -14,8 +14,9 @@ import re
 import pytz
 import json
 import base64
+from functools import partial
 from cogs.error_handling import error_handle
-from utils import embeds, hurricane_generator, useful_functions
+from utils import embeds, hurricane_generator, useful_functions, executors
 from discord.ext import commands
 
 
@@ -45,7 +46,7 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
         if isinstance(error, commands.BadArgument):
             return await ctx.send(embed=embeds.imgembed("Status code 204!", "https://http.cat/204"))
         else:
-            return await error_handle()
+            return await error_handle(self.bot, error, ctx)
 
     @commands.group(help='Posts the stats of [2b2t.](https://en.wikipedia.org/wiki/2b2t)', name="2b2t",
                     invoke_without_command=True)
@@ -335,6 +336,13 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
             [embed.add_field(name=str((re.sub(r"(?<=\w)([A-Z])", r" \1", field)).title()), value=f"{jsonified[field]:,}", inline=True) for field in fields if field in jsonified]
             if "flag" in jsonified["countryInfo"]:
                 embed.set_thumbnail(url=jsonified["countryInfo"]["flag"])
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Searches Wikipedia.", aliases=["wikipedia"])
+    async def wiki(self, ctx, *, page: str):
+        query = list(await self.bot.loop.run_in_executor(None, partial(executors.wikipedia_exec, page)))
+        embed = embeds.twoembed(query[0], query[2])
+        embed.url = query[1]
         await ctx.send(embed=embed)
 
 
