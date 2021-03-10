@@ -15,6 +15,12 @@ class Tasks(commands.Cog, description='Some tasks loops to keep the bot up and r
     def __init__(self, bot):
         self.bot = bot
         self.bot.midnight = datetime.time(hour=0)
+        self.bot.loop.create_task(self.cleanse_dict())
+        self.bot.loop.create_task(self.pur())
+        try:
+            self.status.start()
+        except RuntimeError:
+            pass
 
     async def cleanse_dict(self):
         await self.bot.wait_until_ready()
@@ -42,11 +48,9 @@ class Tasks(commands.Cog, description='Some tasks loops to keep the bot up and r
                                                                  name=status))
         useful_functions.logger.info(f"New status: {status}")
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.status.start()
-        self.bot.loop.create_task(self.cleanse_dict())
-        self.bot.loop.create_task(self.pur())
+    @status.before_loop
+    async def before_status(self):
+        await self.bot.wait_until_ready()
 
 
 def setup(bot):

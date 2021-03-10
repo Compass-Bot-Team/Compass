@@ -7,11 +7,16 @@ import humanize
 import pkg_resources
 import sys
 import psutil
-import time
 import aiosqlite
 import typing
 import inspect
 import os
+import itertools
+import pygit2
+import datetime
+import time
+import pytz
+import asyncio
 from utils import embeds, useful_functions, checks
 from discord.ext import commands
 
@@ -69,9 +74,11 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         people = [574984194024013825, 210958048691224576]
         swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fucker", "shitted", "shitting", "fucker",
                   "motherfucker", "dogshit", "bullshit", "ass", "faggot", "goddamn", "fag"]
-        alt_lists = list(f"{swear}." for swear in swears) + list(f"{swear}," for swear in swears) + list(f"{swear}!" for swear in swears) + list(f"{swear}?" for swear in swears) + list(f"{swear}s" for swear in swears)
-    #    for swear in alt_lists:
-    #        alt_lists += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in swear))))
+        alt_lists = list(f"{swear}." for swear in swears) + list(f"{swear}," for swear in swears) + list(
+            f"{swear}!" for swear in swears) + list(f"{swear}?" for swear in swears) + list(
+            f"{swear}s" for swear in swears)
+        #    for swear in alt_lists:
+        #        alt_lists += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in swear))))
         if message.author.id in people and message.content in alt_lists:
             await message.channel.send(f"<@{message.author.id}> STOP SWEARING <:TBK_witheredwojak:742475096366776370>")
         # ok now this is actually cache stuff below this line
@@ -99,28 +106,47 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
             await db.commit()
             await ctx.send(f"Success!")
 
-    @commands.command(aliases=["stats", "analytics"], help="Posts some cool information about the bot.")
+    async def format_commit(self, commit):
+        # stolen from r.danny
+        short, _, _ = commit.message.partition('\n')
+        short_sha2 = commit.hex[0:6]
+        commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
+        commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(commit_tz)
+        offset = commit_time.astimezone(pytz.utc).replace(tzinfo=None)
+        return f'[`{short_sha2}`](https://github.com/Compass-Bot-Team/Compass/{commit.hex}) {short} at {offset.strftime("%Y-%m-%d %H:%M:%S")}'
+
+    @commands.group(invoke_without_command=True,
+                    aliases=["stats", "analytics"], help="Posts some cool information about the bot.")
     async def about(self, ctx):
+        # getting the commits, stolen from r. danny
+        # (https://github.com/Rapptz/RoboDanny/blob/30b1edd3a2ca6494efdb5b4a95ba6e56c9dc0d61/cogs/stats.py#L211)
+        repo = pygit2.Repository('.git')
+        commits = list(itertools.islice(repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), 3))
+        # getting users who did stuff
         DTOG = self.bot.get_user(self.bot.config["owners"][0])
         Anto = self.bot.get_user(210473676339019776)
         LegitSi = self.bot.get_user(184145857526890506)
-        embed = embeds.twoembed(f"About",
+        # Constructing the embed
+        embed = embeds.twoembed(f"About | Version {self.bot.version}",
                                 f"Owner: {DTOG} {DTOG.id}\n"
                                 f"Bot Artist: {Anto} {Anto.id}\n"
                                 f"Hurricane Man: {LegitSi} {LegitSi.id}\n"
                                 f"Uptime: {await useful_functions.uptime(self.bot)}\n")
         embed.url = "https://www.github.com/Compass-Bot-Team/Compass"
         embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
+        # Some stats fields
         stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
                         await useful_functions.noliferusers(self.bot): "Top No Lifers",
                         await useful_functions.guilds(self.bot): "Top Server Bot Users",
                         await useful_functions.noliferguilds(self.bot): "Top Server No Lifers"}
         field_inline_status = [True, True, False, False]
         field_count = 0
+        # creating the fields
         for field in stats_fields:
             if field is not None:
                 embed.add_field(name=stats_fields[field], value=field, inline=field_inline_status[field_count])
             field_count += 1
+        # more stats
         embed.add_field(name="Stats", value=f"Cogs: {len(self.bot.cogs):,} ({await useful_functions.cogs(self.bot)})\n"
                                             f"Commands: {self.bot.command_num:,}\n"
                                             f"Messages: {self.bot.message_num:,}\n"
@@ -132,9 +158,36 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
                               f"CPU Usage: {round(self.process.cpu_percent() / psutil.cpu_count(), 1)}%\n"
                               f"Operating System: {sys.platform}", inline=False)
         invite = "https://discord.com/oauth2/authorize?client_id=769308147662979122&permissions=2147352567&scope=bot"
-        embed.add_field(name="Some Links", value=f"[Invite]({invite}) | [Support Server](https://discord.gg/SymdusT) | [GitHub](https://www.github.com/Compass-Bot-Team/Compass) | [Website](https://compasswebsite.dev)")
+        # links and done
+        formatted_commits = ""
+        for c in commits:
+            formatted_commits += f"\n{await self.format_commit(c)}"
+        embed.add_field(name="Links and Commits",
+                        value=f"{formatted_commits}\n"
+                              f"[Invite]({invite}) | [Support Server](https://discord.gg/SymdusT) | [GitHub](https://www.github.com/Compass-Bot-Team/Compass) | [Website](https://compasswebsite.dev)")
         embed.set_footer(text=f"Made in discord.py {pkg_resources.get_distribution('discord.py').version} + "
                               f"Python {self.version.major}.{self.version.minor}.{self.version.micro}!")
+        await ctx.send(embed=embed)
+
+    @about.command(help="Posts websocket stats.")
+    async def websocket(self, ctx):
+        events = ""
+        await useful_functions.wait_until(self.bot)
+        self.bot.not_allocated = False
+        while True:
+            async with aiosqlite.connect("storage.db") as connection:
+                try:
+                    async with connection.execute("SELECT * FROM Websocket;") as cursor:
+                        for _ in iter(int, 1):
+                            info = await cursor.fetchone()
+                            if int(info[1]) > 0:
+                                events += f"{info[0]} | {int(info[1]):,}\n"
+                except Exception:
+                    break
+        self.bot.not_allocated = True
+        embed = embeds.twoembed("Websocket stats!",
+                                f"```\nNAME | AMOUNT\n"
+                                f"{events}\n```")
         await ctx.send(embed=embed)
 
     async def db_speed(self):
@@ -263,13 +316,15 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
 
     @checks.has_admin()
     @commands.command(help="Replies to a support query. Owner only command.")
-    async def reply(self, ctx, channel: int, author: int, *, response:str):
+    async def reply(self, ctx, channel: int, author: int, *, response: str):
         await ctx.send("Success!")
-        await self.bot.get_channel(channel).send(f"<@{author}>", embed=embeds.twoembed(f"Response from {ctx.author}!",response))
+        await self.bot.get_channel(channel).send(f"<@{author}>",
+                                                 embed=embeds.twoembed(f"Response from {ctx.author}!", response))
 
     @commands.group(invoke_without_command=True, help="Shows information about an invite.")
     async def invite(self, ctx, invite: discord.Invite):
-        embed = discord.Embed(colour=0x202225, title=f"Information for {invite}!", description=f"Invite created by {invite.inviter}")
+        embed = discord.Embed(colour=0x202225, title=f"Information for {invite}!",
+                              description=f"Invite created by {invite.inviter}")
         embed.set_footer(text=f"Invite created at {invite.created_at}")
         embed.add_field(name="Invite Uses", value=invite.uses, inline=True)
         embed.add_field(name="Temporary Membership", value=invite.temporary, inline=True)
@@ -286,15 +341,21 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
             if bot in ctx.guild.members:
                 embed = embeds.twoembed(f"Information about {bot}!",
                                         f"You can invite {bot} by [clicking here.](https://discord.com/api/oauth2/authorize?client_id={bot.id}&permissions={bot.guild_permissions.value}&scope=bot)")
-                embed.add_field(name="Bot Permissions", value=f"[{bot.guild_permissions.value}](https://discordapi.com/permissions.html#{bot.guild_permissions.value})", inline=True)
+                embed.add_field(name="Bot Permissions",
+                                value=f"[{bot.guild_permissions.value}](https://discordapi.com/permissions.html#{bot.guild_permissions.value})",
+                                inline=True)
             else:
                 embed = embeds.twoembed(f"Information about {bot}!",
                                         f"You can invite {bot} by [clicking here.](https://discord.com/api/oauth2/authorize?client_id={bot.id}&permissions=8&scope=bot)")
             embed.set_thumbnail(url=bot.avatar_url)
             async with aiosqlite.connect('storage.db') as db:
                 server = await db.execute(f"""SELECT server FROM SupportServers WHERE bot = "{bot.id}";""")
-                grabbed_server = str(await server.fetchone()).replace("('", "").replace(")", "").replace("%27,", "").replace("',", "")
-                embed.add_field(name="Support Server", value=grabbed_server.replace("None", "None (request a support server by joining [here.](https://discord.gg/SymdusT))"), inline=True)
+                grabbed_server = str(await server.fetchone()).replace("('", "").replace(")", "").replace("%27,",
+                                                                                                         "").replace(
+                    "',", "")
+                embed.add_field(name="Support Server", value=grabbed_server.replace("None",
+                                                                                    "None (request a support server by joining [here.](https://discord.gg/SymdusT))"),
+                                inline=True)
             await ctx.send(embed=embed)
         else:
             raise commands.BadArgument("This isn't a bot!")
@@ -315,7 +376,9 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         query = f"""http://www.colourlovers.com/img/{hex(role.colour.value).replace("0x", "")}/100/100/"""
         embed = discord.Embed(colour=0x202225, title=f"Information about {role.name} (ID {role.id}!)")
         embed.set_thumbnail(url=query.replace("/img/0/100/100/", "/img/8B99A4/100/100/"))
-        embed.add_field(name="Permissions", value=f"[{role.permissions.value}](https://discordapi.com/permissions.html#{role.permissions.value})", inline=True)
+        embed.add_field(name="Permissions",
+                        value=f"[{role.permissions.value}](https://discordapi.com/permissions.html#{role.permissions.value})",
+                        inline=True)
         embed.add_field(name="Hoisted", value=role.hoist, inline=True)
         embed.add_field(name="Position", value=f"{role.position}/{len(ctx.guild.roles)}", inline=True)
         embed.add_field(name="Mentionable", value=role.mentionable, inline=True)
@@ -335,7 +398,8 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         try:
             embed.add_field(name=f"Role Members ({len(role.members)})", value=members, inline=False)
         except discord.errors.HTTPException:
-            embed.add_field(name=f"Role Members ({len(role.members)})", value="There was too much to put here.", inline=False)
+            embed.add_field(name=f"Role Members ({len(role.members)})", value="There was too much to put here.",
+                            inline=False)
         await ctx.send(embed=embed)
 
 

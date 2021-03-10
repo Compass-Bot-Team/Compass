@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import wavelink
+import asyncio
 from utils import embeds
 from discord.ext import commands
 
@@ -12,19 +13,23 @@ class Music(commands.Cog):
         self.bot = bot
         if not hasattr(bot, 'wavelink'):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
+        self.bot.loop.create_task(self.run_lavalink())
         self.bot.loop.create_task(self.start_nodes())
+
+    async def run_lavalink(self):
+        lavalink_directory = f"{self.bot.directory}/lavalink"  # change this
+        request = f"cd {lavalink_directory} & java -jar Lavalink.jar"
+        await asyncio.create_subprocess_shell(request, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
     async def start_nodes(self):
         await self.bot.wait_until_ready()
-        try:
-            await self.bot.wavelink.initiate_node(host='127.0.0.1',
-                                                  port=2333,
-                                                  rest_uri='http://127.0.0.1:2333',
-                                                  password=self.bot.config['password'],
-                                                  identifier='Compass',
-                                                  region='us_south')
-        except Exception:
-            return
+        await self.bot.wavelink.initiate_node(host='127.0.0.1',
+                                              port=2333,
+                                              rest_uri='http://127.0.0.1:2333',
+                                              password=self.bot.config['password'],
+                                              identifier='Compass',
+                                              region='us_south')
+
 
     @commands.command(help="Connects to the current message author's voice chat.")
     async def connect(self, ctx):

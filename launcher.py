@@ -10,7 +10,6 @@ import os
 import time
 import asyncio
 import inspect
-import aiohttp
 from utils import embeds
 from utils.useful_functions import prefix
 from discord.ext import commands
@@ -21,6 +20,7 @@ logging.Formatter.converter = time.gmtime
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
+__VERSION__ = 4.5
 
 
 class CompassHelp(commands.HelpCommand):
@@ -85,12 +85,6 @@ class CompassHelp(commands.HelpCommand):
         await channel.send(embed=embed)
 
 
-async def run_lavalink():
-    lavalink_directory = f"{os.getcwd()}/lavalink"  # change this
-    request = f"cd {lavalink_directory} & java -jar Lavalink.jar"
-    await asyncio.create_subprocess_shell(request, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-
-
 class Compass(commands.Bot):
     def __init__(self):
         # Constructor
@@ -101,10 +95,17 @@ class Compass(commands.Bot):
         super().__init__(**parameters)
 
         self.config = yaml.safe_load(open("config.yml"))
+        self.config["github_ids"] = {}
+        # Discord ID | GitHub ID
+        for owner in self.config["owners"]:
+            self.config["github_ids"][38298732] = owner
         self.owner_ids = self.config["owners"]
         self.base_color = 0x202225
+        self.directory = os.getcwd()
+        self.version = __VERSION__
 
         # Cache
+        self.not_allocated = True
         self.launch_time = datetime.datetime.utcnow()
         self.message_num = 0
         self.command_num = 0
@@ -113,8 +114,9 @@ class Compass(commands.Bot):
         self.command_users = {}
         self.command_guilds = {}
 
-        self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
-                           "cogs.fun", "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities")
+        self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
+                           "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities",
+                           "cogs.websocket")
 
         # Loads cogs
         for cog in self.cogs_tuple:
@@ -147,6 +149,4 @@ async def source(command):
     return f'{url}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
 
-loop = asyncio.get_event_loop()
-loop.create_task(run_lavalink())
-loop.create_task(Compass().run())
+asyncio.run(Compass().run())

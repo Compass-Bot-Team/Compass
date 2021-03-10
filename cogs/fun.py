@@ -32,7 +32,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
 
     async def get_chatbot_channels(self):
         channels = []
-        async with aiosqlite.connect("storage.db") as db:
+        async with aiosqlite.connect(f"{self.bot.directory}/storage.db") as db:
             async with db.execute("SELECT *, rowid FROM ChatbotChannels;") as cursor:
                 while True:
                     try:
