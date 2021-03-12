@@ -1,0 +1,13 @@
+[Unit]
+Description=Compass is an all-in-one discord bot coded using discord.py.
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=home/dtog/Documents/PyProjects/Compass
+ExecStart=/usr/bin/python3.8 launcher.py
+User=dtog
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -79,6 +79,9 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
         await ctx.send(embed=embed)
         await channel.send(embed=embed)
         await self.bot.close()
+        # fall back
+        loop = asyncio.get_event_loop()
+        loop.stop()
 
 
 def setup(bot):
