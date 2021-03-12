@@ -41,6 +41,7 @@ class Tasks(commands.Cog, description='Some tasks loops to keep the bot up and r
 
     @tasks.loop(minutes=5)
     async def status(self):
+        await useful_functions.wait_until(self.bot)
         async with aiosqlite.connect('storage.db') as db:
             async with db.execute("SELECT * FROM Statuses ORDER BY RANDOM() LIMIT 1;") as cursor:
                 status = (await cursor.fetchone())[0]

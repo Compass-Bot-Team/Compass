@@ -117,5 +117,16 @@ def meme_quote_perms():
             return True
         else:
             return False
+    return commands.check(predicate)
 
+
+def globus_admin():
+    def predicate(ctx):
+        bot = ctx.bot
+        guild = bot.get_guild(784126280089337887)
+        role = guild.get_role(784127369492299788)
+        if ctx.author.id in [member.id for member in role]:
+            return True
+        else:
+            return False
     return commands.check(predicate)

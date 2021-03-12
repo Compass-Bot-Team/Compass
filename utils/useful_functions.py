@@ -19,7 +19,7 @@ async def wait_until(bot):
         if bot.not_allocated is not True:
             await asyncio.sleep(0.1)
         else:
-            return True
+            return
 
 
 async def ship(number):

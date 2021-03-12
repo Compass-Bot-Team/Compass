@@ -30,7 +30,6 @@ class Music(commands.Cog):
                                               identifier='Compass',
                                               region='us_south')
 
-
     @commands.command(help="Connects to the current message author's voice chat.")
     async def connect(self, ctx):
         player = self.bot.wavelink.get_player(ctx.guild.id)
