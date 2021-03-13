@@ -10,7 +10,6 @@ import datetime
 import random
 import aiosqlite
 import asyncio
-from .error_handling import error_handle
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
 
@@ -31,6 +30,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         self.cleverbot = async_cleverbot.Cleverbot(self.bot.config['travitiakey'])
 
     async def get_chatbot_channels(self):
+        await useful_functions.wait_until(self.bot)
         channels = []
         async with aiosqlite.connect(f"{self.bot.directory}/storage.db") as db:
             async with db.execute("SELECT *, rowid FROM ChatbotChannels;") as cursor:
@@ -45,7 +45,9 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not message.guild or message.channel.id not in list(await self.get_chatbot_channels()) or message.author.bot or message.webhook_id is not None:
+        if not message.guild or message.author.bot or message.webhook_id is not None:
+            return
+        if message.channel.id not in list(await self.get_chatbot_channels()):
             return
         if len(message.content) < 3 or len(message.content) > 60:
             await message.channel.send(embed=embeds.failembed("All messages must be above 3 and below 60 characters!", "API limitations, sowwy."))
