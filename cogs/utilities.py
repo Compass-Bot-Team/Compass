@@ -402,6 +402,18 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
                             inline=False)
         await ctx.send(embed=embed)
 
+    @commands.command(help="Runs an equation.", aliases=["calculator", "math"])
+    async def calc(self, ctx, *, equation: str):
+        proc = await asyncio.create_subprocess_shell(f"cd {self.bot.directory}/utils/lib/submodules/parser && python3 compute.py '{equation}'", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await proc.communicate()
+        if stdout:
+            returned = stdout.decode()
+        elif stderr:
+            returned = stderr.decode()
+        if "Traceback" in returned:
+            raise commands.BadArgument("This is not an equation!")
+        await ctx.send(returned)
+
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

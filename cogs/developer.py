@@ -32,7 +32,7 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
                 await ctx.message.add_reaction('\U0001f7e5')
         await ctx.send(f'```py\nReturned code {proc.returncode}\n{returned}\n```')
 
-    @shell.command(help="Runs SQL code.")
+    @shell.command(help="Runs SQL code.", aliases=["SQL"])
     async def sql(self, ctx, *, command: str):
         async with aiosqlite.connect("storage.db") as db:
             if command.startswith("SELECT "):
