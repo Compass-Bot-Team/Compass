@@ -16,10 +16,11 @@ import pygit2
 import datetime
 import time
 import pytz
-import asyncio
+from utils.lib.submodules.parser.compute import calc
 from utils import embeds, useful_functions, checks
 from discord.ext import commands
 
+calculate = calc
 support_channel_id = 803375502433189888
 
 
@@ -404,15 +405,7 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
 
     @commands.command(help="Runs an equation.", aliases=["calculator", "math"])
     async def calc(self, ctx, *, equation: str):
-        proc = await asyncio.create_subprocess_shell(f"cd {self.bot.directory}/utils/lib/submodules/parser && python3 compute.py '{equation}'", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await proc.communicate()
-        if stdout:
-            returned = stdout.decode()
-        elif stderr:
-            returned = stderr.decode()
-        if "Traceback" in returned:
-            raise commands.BadArgument("This is not an equation!")
-        await ctx.send(returned)
+        await ctx.send(calculate(equation))
 
 
 def setup(bot):
