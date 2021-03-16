@@ -82,6 +82,27 @@ class UserSearcherNoNames(commands.Converter):
         raise commands.MemberNotFound(argument)
 
 
+class UserOrGuild(commands.Converter):
+    async def convert(self, ctx, argument):
+        try:
+            argument = int(argument)
+        except ValueError:
+            raise commands.BadArgument(f"{argument} is not a valid integer!")
+        else:
+            bot = ctx.bot
+            try:
+                user = bot.get_user(argument)
+            except Exception:
+                try:
+                    guild = bot.get_guild(argument)
+                except Exception:
+                    raise commands.BadArgument(f"No matching user or guild with ID {int(argument)}!")
+                else:
+                    return ["guild", guild]
+            else:
+                return ["user", user]
+
+
 def antolib():
     def predicate(ctx):
         return ctx.guild.id == 738530998001860629

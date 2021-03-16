@@ -5,7 +5,8 @@
 import os
 import asyncio
 import aiosqlite
-from utils import useful_functions, embeds
+import json
+from utils import useful_functions, embeds, exceptions, checks
 from discord.ext import commands
 
 
@@ -82,6 +83,36 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
         # fall back
         loop = asyncio.get_event_loop()
         loop.stop()
+
+    @commands.is_owner()
+    @commands.group(invoke_without_command=True, help="Manage command for the bot blacklist.")
+    async def blacklist(self, ctx):
+        raise exceptions.MissingSubcommand("No subcommand found!")
+
+    async def check_if_in_blacklist(self, target):
+        blacklist_file = (self.get_blacklist())["blacklist"]
+        if target[1] == "guild" and target[2].id in blacklist_file["guilds"]:
+            return False
+        elif target[1] == "user" and target[2].id in blacklist_file["users"]:
+            return False
+        else:
+            [blacklist_file[str(target[1])+"s"]].append(target[2].id)
+        #with open("mainbank.json", "w") as f:
+        #    json.dump(users, f)
+        return True
+
+    @staticmethod
+    def get_blacklist():
+        with open("blacklist.json") as file:
+            blacklist = json.load(file)
+        return blacklist
+
+    @commands.is_owner()
+    @blacklist.command(help="Adds a user, or guild ID to the blacklist.")
+    async def add(self, ctx, *, target: checks.UserOrGuild):
+        pass
+#        if target[1] == "guild":
+
 
 
 def setup(bot):

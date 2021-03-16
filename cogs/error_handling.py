@@ -42,11 +42,12 @@ async def error_handle(bot, error, ctx):
         return await ctx.send(embed=failembed("I don't have perms or I was hierarchy'd.", "Give me permissions pwease!"))
     if isinstance(error, exceptions.ImageManipulationError):
         return await ctx.send(embed=failembed("Error in image manipulation!", error))
-    bad_arguments = (commands.BadArgument, commands.BadUnionArgument, commands.BadBoolArgument, commands.BadColourArgument, commands.BadInviteArgument)
-    if isinstance(error, bad_arguments):
+    if isinstance(error, (commands.BadArgument, commands.BadUnionArgument, commands.BadBoolArgument, commands.BadColourArgument, commands.BadInviteArgument)):
         return await ctx.send(embed=failembed("Bad argument!", error))
     if isinstance(error, commands.TooManyArguments):
         return await ctx.send(embed=failembed("Too many arguments!", error))
+    if isinstance(error, exceptions.Blacklisted):
+        return await ctx.send(embed=failembed("You're blacklisted!", "You messed up and now you're blacklisted."))
     else:
         DTOG = bot.get_user(bot.config["owners"][0])
         traceback_text = ''.join(traceback.format_exception(type(error), error, error.__traceback__))

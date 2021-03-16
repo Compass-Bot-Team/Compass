@@ -405,6 +405,7 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
 
     @commands.command(help="Runs an equation.", aliases=["calculator", "math"])
     async def calc(self, ctx, *, equation: str):
+        equation = equation.replace(" ", "")
         await ctx.send(calculate(equation))
 
 

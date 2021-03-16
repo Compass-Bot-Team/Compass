@@ -275,7 +275,6 @@ _book
 *.mobi
 *.pdf
 
-.gitignore
 __pycache__
 __pycache__/objectfile.cpython-38.pyc
 /cogs/__pycache__/
@@ -286,3 +285,4 @@ config.py
 databases/bank.json
 .idea
 storage.db
+blacklist.json

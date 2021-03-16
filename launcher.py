@@ -10,10 +10,11 @@ import os
 import time
 import asyncio
 import inspect
-from utils import embeds
+import json
 from utils.useful_functions import prefix
 from discord.ext import commands
-from utils import useful_functions
+from collections import Counter
+from utils import useful_functions, exceptions
 
 logging.basicConfig(**{"format": f"[%(asctime)s %(name)s %(levelname)s] %(message)s", "level": logging.INFO})
 logging.Formatter.converter = time.gmtime
@@ -43,7 +44,15 @@ class Compass(commands.Bot):
         self.owner_ids = self.config["owners"]
         self.base_color = 0x202225
         self.directory = os.getcwd()
-        self.version = __VERSION__
+        self.config["version"] = __VERSION__
+        # Blacklist
+        with open("blacklist.json") as file:
+            blacklist_file = json.load(file)
+        self.config["blacklist"] = blacklist_file["blacklist"]
+
+        ### Spam control
+        self.spam_control = commands.CooldownMapping.from_cooldown(10, 12.0, commands.BucketType.user)
+        self._auto_spam_count = Counter()
 
         ### Initialize Cache
         # sqlite only does one at a time
@@ -60,19 +69,21 @@ class Compass(commands.Bot):
 
         # non config but oh well
         # If you want to add a cog put in "cogs.cog name"
-        self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling",
-                           "cogs.experimental", "cogs.fun", "cogs.help", "cogs.images",
-                           "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities",
-                           "cogs.websocket")
+        self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
+                           "cogs.help", "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities",
+                           "cogs.websocket", "jishaku")
 
         # Loads cogs
         for cog in self.cogs_tuple:
             self.load_extension(cog)
+            if cog == "jishaku":
+                cog += " (outside of main folder)"
             useful_functions.logger.info(f"Loaded cog {cog}")
 
-        # Load Jishaku
-        self.load_extension("jishaku")
-        useful_functions.logger.info(f"Loaded cog jishaku (outside of main folder)")
+    async def process_commands(self, message):
+        ctx = await self.get_context(message)
+        if ctx.author.id in self.config["blacklist"]["users"] or ctx.guild.id in self.config["blacklist"]["guilds"]:
+            raise exceptions.Blacklisted()
 
     ### Run function
     def run(self):
