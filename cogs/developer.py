@@ -6,6 +6,7 @@ import os
 import asyncio
 import aiosqlite
 import json
+import aiofiles
 from utils import useful_functions, embeds, exceptions, checks
 from discord.ext import commands
 
@@ -84,35 +85,34 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
         loop = asyncio.get_event_loop()
         loop.stop()
 
+    async def target_getter(self, target):
+        user = self.bot.get_user(target)
+        if user is None:
+            guild = self.bot.get_guild(target)
+            if guild is None:
+                raise commands.BadArgument(f"{target} is not a user or guild!")
+            else:
+                target = ["guilds", guild.id, guild.name]
+        else:
+            target = ["humans", user.id, user.name]
+        return target
+
     @commands.is_owner()
     @commands.group(invoke_without_command=True, help="Manage command for the bot blacklist.")
-    async def blacklist(self, ctx):
-        raise exceptions.MissingSubcommand("No subcommand found!")
-
-    async def check_if_in_blacklist(self, target):
-        blacklist_file = (self.get_blacklist())["blacklist"]
-        if target[1] == "guild" and target[2].id in blacklist_file["guilds"]:
-            return False
-        elif target[1] == "user" and target[2].id in blacklist_file["users"]:
-            return False
-        else:
-            [blacklist_file[str(target[1])+"s"]].append(target[2].id)
-        #with open("mainbank.json", "w") as f:
-        #    json.dump(users, f)
-        return True
-
-    @staticmethod
-    def get_blacklist():
-        with open("blacklist.json") as file:
-            blacklist = json.load(file)
-        return blacklist
-
-    @commands.is_owner()
-    @blacklist.command(help="Adds a user, or guild ID to the blacklist.")
-    async def add(self, ctx, *, target: checks.UserOrGuild):
-        pass
-#        if target[1] == "guild":
-
+    async def blacklist(self, ctx, target: int):
+        target = await self.target_getter(target)
+        with open("blacklist.json", "r") as blacklist_file:
+            blacklist_update = json.load(blacklist_file)
+            blacklist = blacklist_update["blacklist"]
+            if target[1] in blacklist[target[0]]:
+                added_or_removed = "removed from"
+                blacklist_update["blacklist"][target[0]].remove(target[1])
+            else:
+                added_or_removed = "added to"
+                blacklist_update["blacklist"][target[0]].append(target[1])
+        with open("blacklist.json", "w") as file:
+            json.dump(blacklist_update, file)
+        await ctx.send(f"This {target[0].replace('s', '')} ({target[2]}) was {added_or_removed} the blacklist!")
 
 
 def setup(bot):

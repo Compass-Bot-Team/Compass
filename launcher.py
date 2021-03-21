@@ -14,7 +14,8 @@ import json
 from utils.useful_functions import prefix
 from discord.ext import commands
 from collections import Counter
-from utils import useful_functions, exceptions
+from utils import useful_functions
+from utils.embeds import failembed
 
 logging.basicConfig(**{"format": f"[%(asctime)s %(name)s %(levelname)s] %(message)s", "level": logging.INFO})
 logging.Formatter.converter = time.gmtime
@@ -42,14 +43,10 @@ class Compass(commands.Bot):
             self.config["github_ids"][38298732] = owner
         # more config stuff
         self.owner_ids = self.config["owners"]
+        self.dtog = self.get_user(721029142602056328)
         self.base_color = 0x202225
         self.directory = os.getcwd()
         self.config["version"] = __VERSION__
-        # Blacklist
-        with open("blacklist.json") as file:
-            blacklist_file = json.load(file)
-        self.config["blacklist"] = blacklist_file["blacklist"]
-
         ### Spam control
         self.spam_control = commands.CooldownMapping.from_cooldown(10, 12.0, commands.BucketType.user)
         self._auto_spam_count = Counter()
@@ -71,7 +68,7 @@ class Compass(commands.Bot):
         # If you want to add a cog put in "cogs.cog name"
         self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
                            "cogs.help", "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities",
-                           "cogs.websocket", "jishaku")
+                           "jishaku")
 
         # Loads cogs
         for cog in self.cogs_tuple:
@@ -82,8 +79,14 @@ class Compass(commands.Bot):
 
     async def process_commands(self, message):
         ctx = await self.get_context(message)
-        if ctx.author.id in self.config["blacklist"]["users"] or ctx.guild.id in self.config["blacklist"]["guilds"]:
-            raise exceptions.Blacklisted()
+        with open("blacklist.json") as file:
+            blacklist_file = json.load(file)
+        blacklist = blacklist_file["blacklist"]
+        humans = blacklist["humans"]
+        guilds = blacklist["guilds"]
+        if ctx.guild is None and ctx.author.id in humans or ctx.guild.id in guilds or ctx.author.id in humans:
+            return
+        await self.invoke(ctx)
 
     ### Run function
     def run(self):
