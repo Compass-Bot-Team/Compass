@@ -14,14 +14,22 @@ cpac_list = (list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c 
     map(''.join, itertools.product(*((c.upper(), c.lower()) for c in 'Central Pacific')))))
 
 numbers = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen', 'Twenty', 'Twenty-One', 'Twenty-Two', 'Twenty-Three', 'Twenty-Four', 'Twenty-Five', 'Twenty-Six', 'Twenty-Seven', 'Twenty-Eight', 'Twenty-Nine', 'Thirty', 'Thirty-One', 'Thirty-Two', 'Thirty-Three', 'Thirty-Four', 'Thirty-Five', 'Thirty-Six', 'Thirty-Seven', 'Thirty-Eight', 'Thirty-Nine', 'Fourty', 'Fourty-One', 'Fourty-Two', 'Fourty-Three', 'Fourty-Four', 'Fourty-Five', 'Fourty-Six', 'Fourty-Seven', 'Fourty-Eight', 'Fourty-Nine', 'Fifty', 'Fifty-One', 'Fifty-Two', 'Fifty-Three', 'Fifty-Four', 'Fifty-Five']
-_2026atlhurricanelist = ["Arthur", "Bertha", "Cristobal", "Dolly", "Edouard", "Fay", "Gonzalo", "Hanna", "Isaias", "Josephine", "Kyle", "Marco", "Nana", "Omar", "Paulette", "Rene", "Sally", "Teddy", "Vicky", "Wilfred"]
 _2021atlhurricanelist = ["Ana", "Bill", "Claudette", "Danny", "Elsa", "Fred", "Grace", "Henri", "Ida", "Julian", "Kate", "Larry", "Mindy", "Nicholas", "Odette", "Peter", "Rose", "Sam", "Teresa", "Victor", "Wanda"]
 _2022atlhurricanelist = ["Alex", "Bonnie", "Colin", "Danielle", "Earl", "Fiona", "Gaston", "Hermine", "Ian", "Julia", "Karl", "Lisa", "Martin", "Nicole", "Owen", "Paula", "Richard", "Shary", "Tobias", "Virginie", "Walter"]
 _2023atlhurricanelist = ["Arlene", "Bret", "Cindy", "Don", "Emily", "Franklin", "Gert", "Harold", "Idalia", "Jose", "Katia", "Lee", "Margot", "Nigel", "Ophelia", "Philippe", "Rina", "Sean", "Tammy", "Vince", "Whitney"]
 _2024atlhurricanelist = ["Alberto", "Beryl", "Chris", "Debby", "Ernesto", "Francine", "Gordon", "Helene", "Isaac", "Joyce", "Kirk", "Leslie", "Milton", "Nadine", "Oscar", "Patty", "Rafael", "Sara", "Tony", "Valerie", "William"]
-_2025atlhurricanelist = ["Andrea", "Barry", "Chantal", "Erin", "Fernand", "Gabrielle", "Humberto", "Imelda", "Jerry", "Karen", "Lorenzo", "Melissa", "Nestor", "Olga", "Pablo", "Rebekah", "Sebastien", "Tanya", "Van", "Wendy"]
-greekhurricanelist = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa", "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi", "Rho", "Sigma", "Tau", "Upsilon", "Phi", "Chi", "Psi", "Omega"]
+_2025atlhurricanelist = ["Andrea", "Barry", "Chantal", "Dexter", "Erin", "Fernand", "Gabrielle", "Humberto", "Imelda", "Jerry", "Karen", "Lorenzo", "Melissa", "Nestor", "Olga", "Pablo", "Rebekah", "Sebastien", "Tanya", "Van", "Wendy"]
+_2026atlhurricanelist = ["Arthur", "Bertha", "Cristobal", "Dolly", "Edouard", "Fay", "Gonzalo", "Hanna", "Isaias", "Josephine", "Kyle", "Leah", "Marco", "Nana", "Omar", "Paulette", "Rene", "Sally", "Teddy", "Vicky", "Wilfred"]
 _2021epachurricanelist = ["Andres", "Blanca", "Carlos", "Dolores", "Enrique", "Felicia", "Guillermo", "Hilda", "Ignacio", "Jimena", "Kevin", "Linda", "Marty", "Nora", "Olaf", "Pamela", "Rick", "Sandra", "Terry", "Vivian", "Waldo", "Xina", "York", "Zelda"]
+_2022epachurricanelist = ["Agatha", "Blas", "Celia", "Darby", "Estelle", "Frank", "Georgette", "Howard", "Ivette", "Javier", "Kay", "Lester", "Madeline", "Newton", "Orlene", "Paine", "Roslyn", "Seymour", "Tina", "Virgil", "Winifred", "Xavier", "Yolanda", "Zeke"]
+_2023epachurricanelist = ["Adrian", "Beatriz", "Calvin", "Dora", "Eugene", "Fernanda", "Greg", "Hilary", "Irwin", "Jova", "Kenneth", "Lidia", "Max", "Norma", "Otis", "Pilar", "Ramon", "Selma", "Todd", "Veronica", "Wiley", "Xina", "York", "Zelda"]
+_2024epachurricanelist = ["Aletta", "Bud", "Carlotta", "Daniel", "Emilia", "Fabio", "Gilma", "Hector", "Ileana", "John", "Kristy", "Lane", "Miriam", "Norman", "Olivia", "Paul", "Rosa", "Sergio", "Tara", "Vicente", "Willa", "Xavier", "Yolanda", "Zeke"]
+_2025epachurricanelist = ["Alvin", "Barbara", "Cosme", "Dalila", "Erick", "Flossie", "Gil", "Henriette", "Ivo", "Juliette", "Kiko", "Lorena", "Mario", "Narda", "Octave", "Priscilla", "Raymond", "Sonia", "Tico", "Velma", "Wallis", "Xina", "York", "Zelda"]
+_2026epachurricanelist = ["Amanda", "Boris", "Cristina", "Douglas", "Elida", "Fausto", "Genevieve", "Hernan", "Iselle", "Julio", "Karina", "Lowell", "Marie", "Norbert", "Odalys", "Polo", "Rachel", "Simon", "Trudy", "Vance", "Winnie", "Xavier", "Yolanda", "Zeke"]
+cpaclist = ["Hone", "Iona", "Keli", "Lala", "Moke", "Nolo", "Olana", "Pena", "Ulana", "Wale ", "Aka", "Ekeka", "Hene", "Iolana", "Keoni", "Lino", "Mele", "Nona", "Oliwa", "Pama", "Upana", "Wene", "Alika", "Ele", "Huko", "Iopa", "Kika", "Lana", "Maka", "Neki", "Omeka", "Pewa", "Unala", "Wali", "Ana", "Ela", "Halola", "Iune", "Kilo", "Loke", "Malia", "Niala", "Oho", "Pali", "Ulika", "Walaka"]
+atlauxlist = ["Adria", "Braylen", "Caridad", "Deshawn", "Emery", "Foster", "Gemma", "Heath", "Isla", "Jacobus", "Kenzie", "Lucio", "Makayla", "Nolan", "Orlanda", "Pax", "Ronin", "Sophie", "Tayshaun", "Viviana", "Will"]
+epacauxlist = ["Aidan", "Bruna", "Carmelo", "Daniella", "Esteban", "Flor", "Gerardo", "Hedda", "Izzy", "Jacinta", "Kenito", "Luna", "Marina", "Nancy", "Ovidio", "Pia", "Rey", "Skylar", "Teo", "Violeta", "Wilfredo", "Xinia", "Yariel", "Zoe"]
+
 
 async def acceptable(chance):
     if chance > 0:
@@ -53,7 +61,7 @@ async def classify(mph, location):
     if mph > 39:
         if location != "Eastern Pacific":
             ts_or_ss = random.randint(0, 100)
-            if ts_or_ss > 15 and location != "Eastern Pacific":
+            if ts_or_ss > 15 and location not in ["Eastern Pacific", "Central Pacific"]:
                 classification = "Tropical Storm"
             else:
                 classification = "Subtropical Storm"
@@ -66,28 +74,49 @@ async def classify(mph, location):
     return classification
 
 async def hurricane_list_calc(year, location):
+    if location == "Central Pacific":
+        return cpaclist
     if year == 2021:
-        if location is None:
-            hurricane_list = (_2021atlhurricanelist + greekhurricanelist)
-        elif location == "Atlantic":
-            hurricane_list = (_2021atlhurricanelist + greekhurricanelist)
+        if location is None or location == "Atlantic":
+            hurricane_list = _2021atlhurricanelist
         elif location == "Eastern Pacific":
-            hurricane_list = (_2021epachurricanelist + greekhurricanelist)
+            hurricane_list = _2021epachurricanelist
     elif year == 2022:
-        hurricane_list = (_2022atlhurricanelist + greekhurricanelist)
+        if location == "Atlantic":
+            hurricane_list = _2022atlhurricanelist
+        elif location == "Eastern Pacific":
+            hurricane_list = _2022epachurricanelist
     elif year == 2023:
-        hurricane_list = (_2023atlhurricanelist + greekhurricanelist)
+        if location == "Atlantic":
+            hurricane_list = _2023atlhurricanelist
+        elif location == "Eastern Pacific":
+            hurricane_list = _2023epachurricanelist
     elif year == 2024:
-        hurricane_list = (_2024atlhurricanelist + greekhurricanelist)
+        if location == "Atlantic":
+            hurricane_list = _2024atlhurricanelist
+        elif location == "Eastern Pacific":
+            hurricane_list = _2024epachurricanelist
     elif year == 2025:
-        hurricane_list = (_2025atlhurricanelist + greekhurricanelist)
+        if location == "Atlantic":
+            hurricane_list = _2025atlhurricanelist
+        elif location == "Eastern Pacific":
+            hurricane_list = _2025epachurricanelist
     elif year == 2026:
-        hurricane_list = (_2026atlhurricanelist + greekhurricanelist)
-    return hurricane_list
+        if location == "Atlantic":
+            hurricane_list = _2026atlhurricanelist
+        elif location == "Eastern Pacific":
+            hurricane_list = _2026epachurricanelist
+    if location == "Atlantic":
+        return hurricane_list+atlauxlist
+    elif location == "Eastern Pacific":
+        return hurricane_list+epacauxlist
 
-async def hurricane_amount_calc(la_nina_or_el_nino):
-    if la_nina_or_el_nino == 'La Nina':
-        hurricane_amount = random.randint(5, 36)
-    elif la_nina_or_el_nino == 'El Nino':
-        hurricane_amount = random.randint(2, 13)
-    return hurricane_amount
+
+async def hurricane_amount_calc(la_nina_or_el_nino, cpac=False):
+    if cpac is not False:
+        return random.randint(1, 10)
+    else:
+        if la_nina_or_el_nino == 'La Nina':
+            return random.randint(5, 36)
+        elif la_nina_or_el_nino == 'El Nino':
+            return random.randint(2, 13)

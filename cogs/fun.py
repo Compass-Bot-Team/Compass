@@ -203,20 +203,27 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
     async def text(self, ctx, *, content: commands.clean_content(use_nicknames=False, fix_channel_mentions=True)):
         await ctx.send(discord.utils.escape_mentions(content))
 
-    @commands.command(help="Generates a random hurricane season. Example command usage; generateseason 2021 EPAC")
+    @commands.command(help="Generates a random hurricane season. This command only supports areas in the juristdiction of the National Hurricane Center/Central Pacific Hurricane Center."
+                           "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"
+                           "Valid locations: Atlantic, Eastern Pacific, Central Pacific")
     async def generateseason(self, ctx, year: typing.Optional[int] = None, location: str = None):
+        cpac_status = False
         if location is None:
             location = "Atlantic"
         elif location in hurricane_generator.atlantic_list:
             location = "Atlantic"
         elif location in hurricane_generator.epac_list:
             location = "Eastern Pacific"
+        elif location in hurricane_generator.cpac_list:
+            location = "Central Pacific"
+            cpac_status = True
+        else:
+            raise commands.BadArgument("Invalid location!")
         list_of_years = [2021, 2022, 2023, 2024, 2025, 2026]
         if year is None:
             year = 2021
         if year not in list_of_years:
-            return await ctx.send(embed=embeds.failembed("Please provide a valid year!",
-                                                         "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"))
+            raise commands.BadArgument("Invalid year!\nValid years: 2021, 2022, 2023, 2024, 2025, 2026")
         hurricane_list = await hurricane_generator.hurricane_list_calc(year, location)
         tropical_depression_list = hurricane_generator.numbers
         tropical_depressions = 0
@@ -224,7 +231,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         hurricanes = 0
         major_hurricanes = 0
         la_nina_or_el_nino = random.choice(['La Nina', 'El Nino'])
-        hurricane_amount = await hurricane_generator.hurricane_amount_calc(la_nina_or_el_nino)
+        hurricane_amount = await hurricane_generator.hurricane_amount_calc(la_nina_or_el_nino, cpac_status)
         tropical_cyclones = ""
         for _ in range(hurricane_amount):
             chance = random.randint(1, 100)
