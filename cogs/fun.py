@@ -10,6 +10,7 @@ import datetime
 import random
 import aiosqlite
 import asyncio
+import pycountry
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
 
@@ -448,7 +449,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
             elif modifiers.startswith("+"):
                 modifiers.strip("+")
                 calculation = result + int(modifiers)
-            elif modifiers.startswith("+"):
+            elif modifiers.startswith("/"):
                 modifiers.strip("/")
                 calculation = result/int(modifiers)
             elif modifiers.startswith("*"):
@@ -457,6 +458,21 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
             await ctx.send(f"{calculation} (Originally {result})")
         else:
             await ctx.send(result)
+
+    @commands.command(help="Posts an image of a compass.")
+    async def compass(self, ctx):
+        compass = random.choice(useful_functions.compasses)
+        embed = embeds.imgembed("Your Compass!", compass)
+        embed.url = compass
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Posts a random country.", aliases=["rcountry", "randcountry"])
+    async def randomcountry(self, ctx):
+        country = random.choice(list(pycountry.countries)).__dict__["_fields"]
+        embed = discord.Embed(color=self.bot.base_color, title=f"Your random country is {country['name']}!")
+        [embed.add_field(name=field.title().replace("_", " "), value=country[field]) for field in country]
+        embed.set_thumbnail(url=f"https://flagpedia.net/data/flags/w580/{country['alpha_2'].lower()}.png")
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

@@ -172,24 +172,25 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
 
     @about.command(help="Posts websocket stats.")
     async def websocket(self, ctx):
-        events = ""
-        await useful_functions.wait_until(self.bot)
-        self.bot.not_allocated = False
-        while True:
-            async with aiosqlite.connect("storage.db") as connection:
-                try:
-                    async with connection.execute("SELECT * FROM Websocket;") as cursor:
-                        for _ in iter(int, 1):
-                            info = await cursor.fetchone()
-                            if int(info[1]) > 0:
-                                events += f"{info[0]} | {int(info[1]):,}\n"
-                except Exception:
-                    break
-        self.bot.not_allocated = True
-        embed = embeds.twoembed("Websocket stats!",
-                                f"```\nNAME | AMOUNT\n"
-                                f"{events}\n```")
-        await ctx.send(embed=embed)
+        raise commands.DisabledCommand(ctx.command)
+#        events = ""
+#        await useful_functions.wait_until(self.bot)
+#        self.bot.not_allocated = False
+#        while True:
+#            async with aiosqlite.connect("storage.db") as connection:
+#                try:
+#                    async with connection.execute("SELECT * FROM Websocket;") as cursor:
+#                        for _ in iter(int, 1):
+#                            info = await cursor.fetchone()
+#                            if int(info[1]) > 0:
+#                                events += f"{info[0]} | {int(info[1]):,}\n"
+#                except Exception:
+#                    break
+#        self.bot.not_allocated = True
+#        embed = embeds.twoembed("Websocket stats!",
+#                                f"```\nNAME | AMOUNT\n"
+#                                f"{events}\n```")
+#        await ctx.send(embed=embed)
 
     async def db_speed(self):
         start2 = time.perf_counter()

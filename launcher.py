@@ -84,7 +84,9 @@ class Compass(commands.Bot):
         blacklist = blacklist_file["blacklist"]
         humans = blacklist["humans"]
         guilds = blacklist["guilds"]
-        if ctx.guild is None and ctx.author.id in humans or ctx.guild.id in guilds or ctx.author.id in humans:
+        if ctx.author.id in humans:
+            return
+        if ctx.guild is not None and ctx.guild.id in guilds:
             return
         await self.invoke(ctx)
 
