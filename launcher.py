@@ -63,7 +63,6 @@ class Compass(commands.Bot):
         self.guild_senders = {}
         self.command_users = {}
         self.command_guilds = {}
-
         # non config but oh well
         # If you want to add a cog put in "cogs.cog name"
         self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",

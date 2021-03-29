@@ -7,7 +7,7 @@ import aiohttp
 import datetime
 import operator
 import asyncio
-import random
+import pytz
 from discord.ext import commands
 
 logger = logging.getLogger(__name__)
@@ -18,6 +18,16 @@ compasses = ["http://3.bp.blogspot.com/_o3i_gldCzcQ/S_jDEt2qEeI/AAAAAAAAAXI/63fE
              "http://cliparts.co/cliparts/8iG/Enn/8iGEnnXrT.jpg",
              "https://i.ytimg.com/vi/wjL_gIRW7TU/maxresdefault.jpg",
              "https://s-media-cache-ak0.pinimg.com/736x/f2/f9/61/f2f961c5fe2bc7c217dd27f5b6e4888d.jpg"]
+
+
+async def format_commit(commit):
+    # stolen from r.danny
+    short, _, _ = commit.message.partition('\n')
+    short_sha2 = commit.hex[0:6]
+    commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
+    commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(commit_tz)
+    offset = commit_time.astimezone(pytz.utc).replace(tzinfo=None)
+    return f'[`{short_sha2}`](https://github.com/Compass-Bot-Team/Compass/{commit.hex}) {short} at {offset.strftime("%Y-%m-%d %H:%M:%S")}'
 
 
 async def wait_until(bot):

@@ -6,8 +6,11 @@ import os
 import asyncio
 import aiosqlite
 import json
-import aiofiles
-from utils import useful_functions, embeds, exceptions, checks
+import pygit2
+import itertools
+import discord
+from utils import useful_functions, embeds
+from utils.useful_functions import format_commit
 from discord.ext import commands
 
 
@@ -98,7 +101,7 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
         return target
 
     @commands.is_owner()
-    @commands.group(invoke_without_command=True, help="Manage command for the bot blacklist.")
+    @commands.group(invoke_without_command=True, help="The managerial command for the bot blacklist.")
     async def blacklist(self, ctx, target: int):
         target = await self.target_getter(target)
         with open("blacklist.json", "r") as blacklist_file:
@@ -113,6 +116,36 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
         with open("blacklist.json", "w") as file:
             json.dump(blacklist_update, file)
         await ctx.send(f"This {target[0].replace('s', '')} ({target[2]}) was {added_or_removed} the blacklist!")
+
+    @commands.group(invoke_without_command=True, help="The managerial command group for git.")
+    async def git(self, ctx):
+        repo = pygit2.Repository('.git')
+        commits = list(itertools.islice(repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), 10))
+        formatted_commits = ""
+        for c in commits:
+            formatted_commits += f"\n{await format_commit(c)}"
+        embed = embeds.twoembed("Most recent Git commits!", formatted_commits)
+        await ctx.send(embed=embed)
+
+    @commands.is_owner()
+    @git.command(help="Syncs with the Git repository.")
+    async def sync(self, ctx):
+        async with ctx.channel.typing():
+            embed = discord.Embed(title="Awaiting results...",
+                                  description="Awaiting results from the GitHub repository.",
+                                  color=self.bot.base_color)
+            await ctx.send(embed=embed)
+            proc = await asyncio.create_subprocess_shell(f"cd {self.bot.directory} & git pull",
+                                                         stdout=asyncio.subprocess.PIPE,
+                                                         stderr=asyncio.subprocess.PIPE)
+            stdout, stderr = await proc.communicate()
+            if stdout:
+                embed.title = "STDOUT!"
+                embed.description = f'{stdout.decode()}'
+            if stderr:
+                embed.title = "STDERR!"
+                embed.description = f'{stderr.decode()}'
+            await ctx.send(embed=embed)
 
 
 def setup(bot):

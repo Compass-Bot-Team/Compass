@@ -13,11 +13,10 @@ import inspect
 import os
 import itertools
 import pygit2
-import datetime
 import time
-import pytz
 from utils.lib.submodules.parser.compute import calc
 from utils import embeds, useful_functions, checks
+from utils.useful_functions import format_commit
 from discord.ext import commands
 
 calculate = calc
@@ -107,15 +106,6 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
             await db.commit()
             await ctx.send(f"Success!")
 
-    async def format_commit(self, commit):
-        # stolen from r.danny
-        short, _, _ = commit.message.partition('\n')
-        short_sha2 = commit.hex[0:6]
-        commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
-        commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(commit_tz)
-        offset = commit_time.astimezone(pytz.utc).replace(tzinfo=None)
-        return f'[`{short_sha2}`](https://github.com/Compass-Bot-Team/Compass/{commit.hex}) {short} at {offset.strftime("%Y-%m-%d %H:%M:%S")}'
-
     @commands.group(invoke_without_command=True,
                     aliases=["stats", "analytics"], help="Posts some cool information about the bot.")
     async def about(self, ctx):
@@ -162,7 +152,7 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         # links and done
         formatted_commits = ""
         for c in commits:
-            formatted_commits += f"\n{await self.format_commit(c)}"
+            formatted_commits += f"\n{await format_commit(c)}"
         embed.add_field(name="Links and Commits",
                         value=f"{formatted_commits}\n"
                               f"[Invite]({invite}) | [Support Server](https://discord.gg/SymdusT) | [GitHub](https://www.github.com/Compass-Bot-Team/Compass) | [Website](https://compasswebsite.dev)")
