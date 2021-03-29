@@ -145,6 +145,8 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
             if stderr:
                 embed.title = "STDERR!"
                 embed.description = f'{stderr.decode()}'
+            for cog in self.bot.cogs_tuple:
+                self.bot.reload_extension(cog)
             await ctx.send(embed=embed)
 
 
