@@ -57,34 +57,67 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
                 request = await self.cleverbot.ask(str(message.content))
             await message.channel.send(embed=embeds.twoembed(f"My response!", request))
 
+    async def check_if_opted_out(self, user):
+        async with aiosqlite.connect("storage.db") as db:
+            async with db.execute("SELECT User from OptOutUsers;") as cursor:
+                while True:
+                    try:
+                        users = []
+                        for _ in iter(int, 1):
+                            info = await cursor.fetchone()
+                            users.append(info[0])
+                    except Exception:
+                        break
+        if str(user) in users:
+            return True
+        else:
+            return False
+
     @commands.Cog.listener()
     async def on_message_delete(self, message):
         if message.author.bot:
             return
         else:
-            embed = embeds.twoembed(f"Message from {message.author} deleted!", message.content)
+            if await self.check_if_opted_out(message.author.id) is True:
+                title = "User opted out"
+                description = "User opted out, they can opt in again if they want by running the 'snipe opt' command"
+                thumbnail = None
+            else:
+                title = f"Message from {message.author} deleted!"
+                description = message.content
+                thumbnail = message.author.avatar_url
+            embed = embeds.twoembed(title, description)
             embed.timestamp = datetime.datetime.utcnow()
-            embed.set_thumbnail(url=message.author.avatar_url)
+            if thumbnail is not None:
+                embed.set_thumbnail(url=thumbnail)
             self.bot.snipe[message.channel.id] = embed
-            return embed
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         if before.author.bot:
             return
         else:
-            embed = embeds.twoembed(f"Message edited by {before.author}!", before.content)
+            if await self.check_if_opted_out(before.author.id) is True:
+                title = "User opted out"
+                description = "User opted out, they can opt in again if they want by running the 'snipe opt' command"
+                thumbnail = None
+            else:
+                title = f"Message from {before.author} edited!"
+                description = before.content
+                thumbnail = before.author.avatar_url
+            embed = embeds.twoembed(title, description)
             embed.timestamp = datetime.datetime.utcnow()
-            embed.set_thumbnail(url=before.author.avatar_url)
+            if thumbnail is not None:
+                embed.set_thumbnail(url=thumbnail)
             self.bot.editsnipe[before.channel.id] = embed
-            return embed
 
     @commands.command(help="Posts a random person in the message server.")
     async def someone(self, ctx):
         await ctx.send(embed=embeds.twoembed(f"{ctx.message.author}, here's someone.",
                                              f"<@{random.choice(ctx.guild.members).id}>"))
 
-    @commands.command(help="Posts the last deleted message in the channel.")
+    @commands.group(invoke_without_command=True,
+                    help="Posts the last deleted message in the channel.")
     async def snipe(self, ctx, *, channel: discord.TextChannel = None):
         if channel is None:
             channel = ctx.channel
@@ -93,6 +126,18 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         else:
             await ctx.send(embed=embeds.failembed("You can't view this channel!",
                                                   "Try a different channel."))
+
+    @snipe.command(help="Manages the snipe opt out system.")
+    async def opt(self, ctx):
+        if await self.check_if_opted_out(ctx.author.id) is True:
+            command = f"""INSERT INTO OptOutUsers VALUES ("{ctx.author.id}");"""
+        else:
+            command = f"""DELETE FROM OptOutUsers WHERE User = "{ctx.author.id}";"""
+        async with aiosqlite.connect("storage.db") as connection:
+            await connection.execute(command)
+            await connection.commit()
+            await ctx.send(command)
+
 
     @commands.command(help="Posts the last edited message in the channel.")
     async def editsnipe(self, ctx, *, channel: discord.TextChannel = None):
