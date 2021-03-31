@@ -18,6 +18,7 @@ from functools import partial
 from cogs.error_handling import error_handle
 from utils import embeds, hurricane_generator, useful_functions, executors
 from discord.ext import commands
+from bs4 import BeautifulSoup
 
 
 class APIs(commands.Cog, description='This cog just pulls from websites.'):
@@ -28,6 +29,25 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
         self.reddit = asyncpraw.Reddit(client_id=self.bot.config['redditauth'][1], client_secret=self.bot.config['redditauth'][0],
                                        password=self.bot.config['password'], user_agent=self.bot.config['redditauth'][2],
                                        username="Sovietica")
+
+    @commands.command(help="Posts two would you rather prompts from either.io.", aliases=["wouldyourather"])
+    async def wyr(self, ctx):
+        async with ctx.channel.typing():
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get("https://either.io") as page:
+                    soup = BeautifulSoup(await page.text(), 'lxml')
+                    found = [soup.find_all('div', attrs={"class": "option"})]
+        lists = [str(found[0][2]), str(found[0][3])]
+        new_lists = []
+        for _list in lists:
+            new_list = _list.splitlines()
+            new_lists.append(new_list[2].strip("</a>"))
+        embed = embeds.twoembed(str(soup.title.text), "Would you rather...")
+        embed.add_field(name="🟥 - Option 1", value=new_lists[0], inline=True)
+        embed.add_field(name="🟦 - Option 2", value=new_lists[1], inline=True)
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("🟥")
+        await message.add_reaction("🟦")
 
     @commands.command(help="Posts the minecraft skin of a given username.")
     async def skin(self, ctx, *, user: str):
