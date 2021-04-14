@@ -120,3 +120,16 @@ async def hurricane_amount_calc(la_nina_or_el_nino, cpac=False):
             return random.randint(5, 36)
         elif la_nina_or_el_nino == 'El Nino':
             return random.randint(2, 13)
+
+months = {"January": {"num": 1},
+          "February": {"num": 2},
+          "March": {"num": 3},
+          "April": {"num": 4},
+          "May": {"num": 5},
+          "June": {"num": 6},
+          "July": {"num": 7},
+          "August": {"num": 8},
+          "September": {"num": 9},
+          "October": {"num": 10},
+          "November": {"num": 11},
+          "December": {"num": 12}}

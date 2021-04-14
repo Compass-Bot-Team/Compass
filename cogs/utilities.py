@@ -14,13 +14,10 @@ import os
 import itertools
 import pygit2
 import time
-from utils.lib.submodules.parser.compute import calc
+import parser
 from utils import embeds, useful_functions, checks
 from utils.useful_functions import format_commit
 from discord.ext import commands
-
-calculate = calc
-support_channel_id = 803375502433189888
 
 
 class Utilities(commands.Cog, description='All of the utility commands for the bot.'):
@@ -119,12 +116,11 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         LegitSi = self.bot.get_user(184145857526890506)
         # Constructing the embed
         embed = embeds.twoembed(f"About | Version {self.bot.version}",
-                                f"Owner: {DTOG} {DTOG.id}\n"
-                                f"Bot Artist: {Anto} {Anto.id}\n"
-                                f"Hurricane Man: {LegitSi} {LegitSi.id}\n"
+                                f"Owner: {DTOG} and {Anto}\n"
+                                f"Hurricane Man: {LegitSi}\n"
                                 f"Uptime: {await useful_functions.uptime(self.bot)}\n")
-        embed.url = "https://www.github.com/Compass-Bot-Team/Compass"
-        embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
+        embed.url = "discord.gg/SymdusT"
+#        embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
         # Some stats fields
         stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
                         await useful_functions.noliferusers(self.bot): "Top No Lifers",
@@ -297,7 +293,7 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
 
     @commands.command(help="Sends a support question to the bot support team.")
     async def support(self, ctx, *, question: str):
-        support_channel = self.bot.get_channel(support_channel_id)
+        support_channel = self.bot.get_channel(803375502433189888)
         embed = embeds.twoembed(f"Question from {ctx.author}!",
                                 question)
         embed.add_field(name="Channel ID", value=ctx.channel.id, inline=True)
@@ -396,8 +392,8 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
 
     @commands.command(help="Runs an equation.", aliases=["calculator", "math"])
     async def calc(self, ctx, *, equation: str):
-        equation = equation.replace(" ", "")
-        await ctx.send(calculate(equation))
+        code = parser.expr(equation.replace(" ", "")).compile()
+        await ctx.send(eval(code))
 
 
 def setup(bot):

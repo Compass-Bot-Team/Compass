@@ -55,3 +55,13 @@ def failembed(title, text, timestamp=True):
     if timestamp is True:
         embed_var.timestamp = datetime.datetime.utcnow()
     return embed_var
+
+def embedleader(title, url, botval, webval, memval, totalval):
+    embedvar = discord.Embed(title=title, color=0x202225)
+    embedvar.set_thumbnail(url=url)
+    embedvar.add_field(name="Total Messages", value=str(totalval), inline=False)
+    embedvar.add_field(name="Bot Messages", value=str(botval), inline=True)
+    embedvar.add_field(name="Webhook Messages", value=str(webval), inline=True)
+    embedvar.add_field(name="User Messages", value=str(memval), inline=True)
+    embedvar.set_footer(text="Support Server: https://discord.gg/SymdusT")
+    return embedvar

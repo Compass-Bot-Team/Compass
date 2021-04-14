@@ -12,8 +12,13 @@ githubkey: Github API key
 nasakey: Nasa API Key
 travitiakey: Travitia API Key
 redditauth:
-  - idk I forgot sorry
-  - idk I forgot sorry
-  - Reddit user agent
+  client_id:
+    Reddit Client ID
+  client_secret:
+    Reddit Client Secret
+  user_agent:
+    Reddit User Agent
+  username:
+    Reddit Username
 zanekey: Zane API Key
 urbankey: RapidAPI Urban Dictionary Key

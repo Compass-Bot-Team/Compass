@@ -26,9 +26,10 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
         self.bot = bot
         self.engine = cse.Search(self.bot.config['googleapikey'])
         self.client = sr_api.Client()
-        self.reddit = asyncpraw.Reddit(client_id=self.bot.config['redditauth'][1], client_secret=self.bot.config['redditauth'][0],
-                                       password=self.bot.config['password'], user_agent=self.bot.config['redditauth'][2],
-                                       username="Sovietica")
+        self.bot.reddit_info = self.bot.config["redditauth"]
+        self.reddit = asyncpraw.Reddit(client_id=self.bot.reddit_info["client_id"], client_secret=self.bot.reddit_info["client_secret"],
+                                       password=self.bot.config['password'], user_agent=self.bot.reddit_info["user_agent"],
+                                       username=self.bot.reddit_info["username"])
 
     @commands.command(help="Posts two would you rather prompts from either.io.", aliases=["wouldyourather"])
     async def wyr(self, ctx):
@@ -43,6 +44,7 @@ class APIs(commands.Cog, description='This cog just pulls from websites.'):
             new_list = _list.splitlines()
             new_lists.append(new_list[2].strip("</a>"))
         embed = embeds.twoembed(str(soup.title.text), "Would you rather...")
+        embed.url = "https://either.io"
         embed.add_field(name="🟥 - Option 1", value=new_lists[0], inline=True)
         embed.add_field(name="🟦 - Option 2", value=new_lists[1], inline=True)
         message = await ctx.send(embed=embed)

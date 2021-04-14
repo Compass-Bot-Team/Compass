@@ -115,10 +115,7 @@ def has_admin():
         bot = ctx.bot
         guild = bot.get_guild(738530998001860629)
         role = guild.get_role(793211817174237215)
-        list_of_ids = []
-        for member in role.members:
-            list_of_ids.append(member.id)
-        if ctx.author.id in list_of_ids or ctx.author.id in config["owners"]:
+        if ctx.author.id in [member.id for member in role.members] or ctx.author.id in config["owners"]:
             return True
         else:
             return False
@@ -131,10 +128,7 @@ def meme_quote_perms():
         bot = ctx.bot
         guild = bot.get_guild(738530998001860629)
         role = guild.get_role(793211817174237215)
-        list_of_ids = []
-        for member in role.members:
-            list_of_ids.append(member.id)
-        if ctx.author.id in list_of_ids or ctx.author.id in config["owners"] or ctx.author.id in config["whitelisted"]:
+        if ctx.author.id in [member.id for member in role.members] or ctx.author.id in config["owners"] or ctx.author.id in config["whitelisted"]:
             return True
         else:
             return False
@@ -146,8 +140,33 @@ def globus_admin():
         bot = ctx.bot
         guild = bot.get_guild(784126280089337887)
         role = guild.get_role(784127369492299788)
-        if ctx.author.id in [member.id for member in role]:
+        if ctx.author.id in [member.id for member in role.members]:
             return True
         else:
             return False
+    return commands.check(predicate)
+
+
+def is_volunteer():
+    def predicate(ctx):
+        client = ctx.bot
+        server = client.get_guild(738530998001860629)
+        role = server.get_role(793211817174237215)
+        if ctx.author.id in [member.id for member in role.members]:
+            return True
+        else:
+            return False
+    return commands.check(predicate)
+
+def not_in_tbk():
+    def predicate(ctx):
+        client = ctx.bot
+        server = client.get_guild(738530998001860629)
+        role = server.get_role(793211817174237215)
+        members = [member.id for member in role.members]
+        if ctx.guild:
+            if ctx.guild.id != 703420768360595456 and ctx.author.id not in members:
+                return False
+            else:
+                return True
     return commands.check(predicate)

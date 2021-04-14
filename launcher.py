@@ -11,11 +11,8 @@ import time
 import asyncio
 import inspect
 import json
-from utils.useful_functions import prefix
 from discord.ext import commands
-from collections import Counter
 from utils import useful_functions
-from utils.embeds import failembed
 
 logging.basicConfig(**{"format": f"[%(asctime)s %(name)s %(levelname)s] %(message)s", "level": logging.INFO})
 logging.Formatter.converter = time.gmtime
@@ -26,12 +23,12 @@ os.environ["JISHAKU_HIDE"] = "True"
 __VERSION__ = 4.6
 
 
-class Compass(commands.Bot):
+class NewBot(commands.Bot):
     def __init__(self):
         # Constructor
-        constructor = {"command_prefix": prefix,
+        constructor = {"command_prefix": ["ant!", "c!"],
                        "intents": discord.Intents.all(),
-                       "description": "Compass is an all-in-one bot coded in discord.py."}
+                       "description": "NewBot is an all-in-one bot coded in discord.py."}
         super().__init__(**constructor)
 
         ### Initialize config
@@ -49,7 +46,7 @@ class Compass(commands.Bot):
         self.config["version"] = __VERSION__
         ### Spam control
         self.spam_control = commands.CooldownMapping.from_cooldown(10, 12.0, commands.BucketType.user)
-        self._auto_spam_count = Counter()
+        # self._auto_spam_count = Counter()
 
         ### Initialize Cache
         # sqlite only does one at a time
@@ -63,17 +60,12 @@ class Compass(commands.Bot):
         self.guild_senders = {}
         self.command_users = {}
         self.command_guilds = {}
-        # non config but oh well
         # If you want to add a cog put in "cogs.cog name"
-        self.cogs_tuple = ("cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
-                           "cogs.help", "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks", "cogs.utilities",
-                           "jishaku")
-
-        # Loads cogs
-        for cog in self.cogs_tuple:
+        self.cogs_list = ["cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
+                          "cogs.help", "cogs.images", "cogs.moderation", "cogs.music", "cogs.stats", "cogs.tasks",
+                          "cogs.utilities", "jishaku"]
+        for cog in self.cogs_list:
             self.load_extension(cog)
-            if cog == "jishaku":
-                cog += " (outside of main folder)"
             useful_functions.logger.info(f"Loaded cog {cog}")
 
     async def process_commands(self, message):
@@ -94,15 +86,16 @@ class Compass(commands.Bot):
         super().run(self.config["token"])
 
 
-### Source function for help command and source command, modified from R. Danny
+### Source function is derivative of the R. Danny bot.
 async def source(command):
+    bot = NewBot()
     url = "https://github.com/Compass-Bot-Team/Compass/blob/rewrite"
     if command == 'help':
-        src = type(Compass().help_command)
+        src = type(bot.help_command)
         module = src.__module__
         filename = inspect.getsourcefile(src)
     else:
-        obj = Compass().get_command(command.replace('.', ' '))
+        obj = bot.get_command(command.replace('.', ' '))
         src = obj.callback.__code__
         module = obj.callback.__module__
         filename = src.co_filename
@@ -114,4 +107,6 @@ async def source(command):
     return f'{url}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
 
-asyncio.run(Compass().run())
+# noinspection PyTypeChecker
+# (to stop my IDE from going crazy)
+asyncio.run(NewBot().run())

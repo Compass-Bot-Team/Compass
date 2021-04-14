@@ -1,10 +1,10 @@
 [Unit]
-Description=Compass is an all-in-one discord bot coded using discord.py.
+Description=NewBot is an all-in-one discord bot coded using discord.py.
 After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=home/dtog/Documents/PyProjects/Compass
+WorkingDirectory=home/dtog/Documents/PyProjects/NewBot
 ExecStart=/usr/bin/python3.8 launcher.py
 User=dtog
 Restart=always

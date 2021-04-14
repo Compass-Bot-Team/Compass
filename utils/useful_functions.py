@@ -19,6 +19,60 @@ compasses = ["http://3.bp.blogspot.com/_o3i_gldCzcQ/S_jDEt2qEeI/AAAAAAAAAXI/63fE
              "https://i.ytimg.com/vi/wjL_gIRW7TU/maxresdefault.jpg",
              "https://s-media-cache-ak0.pinimg.com/736x/f2/f9/61/f2f961c5fe2bc7c217dd27f5b6e4888d.jpg"]
 
+servers = {
+    691668090617987103: 2,
+    646424595439550494: 8,
+    280051435867996160: 9,
+    497514956661587968: 11,
+    440500637453647872: 12,
+    526308732896935946: 15,
+    504557697685782538: 16,
+    703420768360595456: 22,
+    709199261958668299: 24,
+    589563656224899131: 25,
+    710192274377801769: 28,
+    722263109611421726: 29,
+    722609216187138061: 30,
+    723808678981140571: 31,
+    695450494201495552: 32,
+    409654413184073748: 33,
+    715547760404856952: 34,
+    617669539231956994: 35,
+    506036828088827914: 36,
+    688026930913738807: 37,
+    490851241912565770: 38,
+    663079032656494623: 39,
+    589274124308840471: 40,
+    381522394222690306: 41,
+    722061977622675475: 42,
+    616743046565855232: 43,
+    339948052590624779: 44,
+    749573506773286923: 46,
+    767658717042180106: 47,
+    574647618257420302: 48,
+    712797807492202496: 49,
+    690112152526389252: 50,
+    756708216771051643: 51,
+    618426945356431383: 52,
+    738530998001860629: 53,
+    708999114817536000: 54,
+    527645292238209034: 55,
+    376407945459662859: 56,
+    736359802908836010: 57,
+    701454323745292369: 58,
+    804473952427835453: 59,
+    803105769238167582: 60,
+    814229954535489647: 61
+}
+
+def validate(date_text):
+    try:
+        nicething = datetime.datetime.strptime(date_text, "%d/%m/%Y")
+        return nicething
+    except ValueError:
+        print(ValueError)
+        return None
+
 
 async def format_commit(commit):
     # stolen from r.danny
@@ -133,14 +187,6 @@ async def cogs(bot):
             cogs_list += f", {cog}"
         cog_count += 1
     return cogs_list
-
-
-async def prefix(bot, message):
-    if message.guild is not None and message.guild.id == 336642139381301249:
-        prefix = "c+"
-    else:
-        prefix = "c!"
-    return commands.when_mentioned_or(str(prefix))(bot, message)
 
 
 async def gist_maker(token, description, file_name, file_content, file_type="MD"):
