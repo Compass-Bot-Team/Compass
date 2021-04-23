@@ -165,8 +165,11 @@ def not_in_tbk():
         role = server.get_role(793211817174237215)
         members = [member.id for member in role.members]
         if ctx.guild:
-            if ctx.guild.id != 703420768360595456 and ctx.author.id not in members:
+            if ctx.guild.id == 703420768360595456 and ctx.author.id not in members:
                 return False
             else:
                 return True
+        else:
+            return True 
+
     return commands.check(predicate)

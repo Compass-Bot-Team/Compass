@@ -62,7 +62,8 @@ servers = {
     701454323745292369: 58,
     804473952427835453: 59,
     803105769238167582: 60,
-    814229954535489647: 61
+    814229954535489647: 61,
+    769762755179446332: 62
 }
 
 def validate(date_text):
@@ -158,23 +159,6 @@ async def noliferguilds(bot):
         return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
     else:
         return None
-
-
-async def uptime(bot):
-    delta_uptime = datetime.datetime.utcnow() - bot.launch_time
-    hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
-    minutes, seconds = divmod(remainder, 60)
-    days, hours = divmod(hours, 24)
-    uptime_total = []
-    if days != 0:
-        uptime_total.append(f"{days} days")
-    if hours != 0:
-        uptime_total.append(f"{hours} hours")
-    if minutes != 0:
-        uptime_total.append(f"{minutes} minutes")
-    if seconds != 0:
-        uptime_total.append(f"{seconds} seconds")
-    return str(uptime_total).replace("[", "").replace("]", "").replace("'", "")
 
 
 async def cogs(bot):

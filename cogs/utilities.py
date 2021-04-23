@@ -15,6 +15,7 @@ import itertools
 import pygit2
 import time
 import parser
+import datetime
 from utils import embeds, useful_functions, checks
 from utils.useful_functions import format_commit
 from discord.ext import commands
@@ -114,12 +115,15 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         DTOG = self.bot.get_user(self.bot.config["owners"][0])
         Anto = self.bot.get_user(210473676339019776)
         LegitSi = self.bot.get_user(184145857526890506)
+        # uptime
+        delta_uptime = datetime.datetime.utcnow() - self.bot.launch_time
+        uptime = delta_uptime.seconds
         # Constructing the embed
-        embed = embeds.twoembed(f"About | Version {self.bot.version}",
+        embed = embeds.twoembed(f"About",
                                 f"Owner: {DTOG} and {Anto}\n"
                                 f"Hurricane Man: {LegitSi}\n"
-                                f"Uptime: {await useful_functions.uptime(self.bot)}\n")
-        embed.url = "discord.gg/SymdusT"
+                                f"Uptime: {humanize.precisedelta(uptime)}\n")
+        embed.url = "https://discord.gg/SymdusT"
 #        embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
         # Some stats fields
         stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
