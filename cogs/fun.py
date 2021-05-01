@@ -11,6 +11,7 @@ import random
 import aiosqlite
 import asyncio
 import pycountry
+from utils.assets.jobs import jobs_list
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
 
@@ -517,6 +518,13 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         embed = discord.Embed(color=self.bot.base_color, title=f"Your random country is {country['name']}!")
         [embed.add_field(name=field.title().replace("_", " "), value=country[field]) for field in country]
         embed.set_thumbnail(url=f"https://flagpedia.net/data/flags/w580/{country['alpha_2'].lower()}.png")
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Generates a random contract.")
+    async def contract(self, ctx):
+        job = random.choice(jobs_list[0])
+        contract_value = random.randint(30000, 1000000)
+        embed = embeds.twoembed(f"You got hired as a {job[0].title()}!", f"The job is **{jobs[1]}**, but you make **{contract_value:,}** a year.")
         await ctx.send(embed=embed)
 
 
