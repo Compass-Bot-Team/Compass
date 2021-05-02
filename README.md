@@ -1,7 +1,7 @@
 ## Compass
 Compass is an all-in-one bot coded in Python using [discord.py.](https://github.com/Rapptz/discord.py)
 
-![LOGO](LOGO_480_480.png)
+![LOGO](icons/LOGO_480_480.png)
 
 [![DISCORD](https://img.shields.io/discord/738530998001860629?color=7A8DCF&label=discord)](https://discord.gg/SymdusT)
 [![BOT_INVITE](https://img.shields.io/badge/bot%20invite-click%20here-7A8DCF)](https://discord.com/oauth2/authorize?client_id=769308147662979122&permissions=2147352567&scope=bot)

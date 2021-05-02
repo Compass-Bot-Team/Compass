@@ -11,6 +11,7 @@ import random
 import aiosqlite
 import asyncio
 import pycountry
+import utils.assets.operating_systems as operating_systems
 from utils.assets.jobs import jobs_list
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
@@ -525,6 +526,17 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         job = random.choice(jobs_list[0])
         contract_value = random.randint(30000, 1000000)
         embed = embeds.twoembed(f"You got hired as a {job[0].title()}!", f"The job is **{jobs[1]}**, but you make **{contract_value:,}** a year.")
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Posts a random operating system.", aliases=["operatingsystem", "operating_system", "oses"])
+    async def os(self, ctx):
+        operating_system = random.choice(operating_systems.oses)
+        embed = embeds.twoembed(operating_system["name"], operating_system["description"])
+        if operating_system["name"] not in ["Fedora"]:
+            embed.url = f"https://en.wikipedia.org/wiki/{operating_system['name'].replace(' ', '_')}"
+        if operating_system["name"] == "Fedora":
+            embed.url = f"https://en.wikipedia.org/wiki/Fedora_(operating_system)"
+        embed.set_thumbnail(url=f"https://raw.githubusercontent.com/Compass-Bot-Team/Compass/rewrite/icons/{str(operating_system['name']).replace(' ', '%20')}.png")
         await ctx.send(embed=embed)
 
 
