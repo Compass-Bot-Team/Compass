@@ -147,17 +147,6 @@ def globus_admin():
     return commands.check(predicate)
 
 
-def is_volunteer():
-    def predicate(ctx):
-        client = ctx.bot
-        server = client.get_guild(738530998001860629)
-        role = server.get_role(793211817174237215)
-        if ctx.author.id in [member.id for member in role.members]:
-            return True
-        else:
-            return False
-    return commands.check(predicate)
-
 def not_in_tbk():
     def predicate(ctx):
         client = ctx.bot

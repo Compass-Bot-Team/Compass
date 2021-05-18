@@ -8,71 +8,97 @@ import datetime
 import operator
 import asyncio
 import pytz
-from discord.ext import commands
+import json
+import os
 
+directory = os.getcwd()
 logger = logging.getLogger(__name__)
 
-states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming", "al", "ak", "az", "ar", "ca", "co", "ct", "dc", "de", "fl", "ga", "hi", "id", "il", "in", "ia", "ks", "ky", "la", "me", "md", "ma", "mi", "mn", "ms", "mo", "mt", "ne", "nv", "nh", "nj", "nm", "ny", "nc", "nd", "oh", "ok", "or", "pa", "ri", "sc", "sd", "tn", "tx", "ut", "vt", "va", "wa", "wv", "wi", "wy", "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware", "florida", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana", "maine", "maryland", "massachusetts", "michigan", "minnesota", "mississippi", "missouri", "montana", "nebraska", "nevada", "new hampshire", "new jersey", "new mexico", "new york", "north carolina", "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island", "south carolina", "south dakota", "tennessee", "texas", "utah", "vermont", "virginia", "washington", "west virginia", "wisconsin", "wyoming"]
+states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY",
+          "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH",
+          "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "Alabama", "Alaska",
+          "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Hawaii", "Idaho",
+          "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts",
+          "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+          "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
+          "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+          "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming", "al", "ak", "az", "ar", "ca", "co", "ct",
+          "dc", "de", "fl", "ga", "hi", "id", "il", "in", "ia", "ks", "ky", "la", "me", "md", "ma", "mi", "mn", "ms",
+          "mo", "mt", "ne", "nv", "nh", "nj", "nm", "ny", "nc", "nd", "oh", "ok", "or", "pa", "ri", "sc", "sd", "tn",
+          "tx", "ut", "vt", "va", "wa", "wv", "wi", "wy", "alabama", "alaska", "arizona", "arkansas", "california",
+          "colorado", "connecticut", "delaware", "florida", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas",
+          "kentucky", "louisiana", "maine", "maryland", "massachusetts", "michigan", "minnesota", "mississippi",
+          "missouri", "montana", "nebraska", "nevada", "new hampshire", "new jersey", "new mexico", "new york",
+          "north carolina", "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island",
+          "south carolina", "south dakota", "tennessee", "texas", "utah", "vermont", "virginia", "washington",
+          "west virginia", "wisconsin", "wyoming"]
 
 compasses = ["http://3.bp.blogspot.com/_o3i_gldCzcQ/S_jDEt2qEeI/AAAAAAAAAXI/63fENdJMsGA/s1600/old+compass.jpg",
              "http://cliparts.co/cliparts/8iG/Enn/8iGEnnXrT.jpg",
              "https://i.ytimg.com/vi/wjL_gIRW7TU/maxresdefault.jpg",
              "https://s-media-cache-ak0.pinimg.com/736x/f2/f9/61/f2f961c5fe2bc7c217dd27f5b6e4888d.jpg"]
 
-servers = {
-    691668090617987103: 2,
-    646424595439550494: 8,
-    280051435867996160: 9,
-    497514956661587968: 11,
-    440500637453647872: 12,
-    526308732896935946: 15,
-    504557697685782538: 16,
-    703420768360595456: 22,
-    709199261958668299: 24,
-    589563656224899131: 25,
-    710192274377801769: 28,
-    722263109611421726: 29,
-    722609216187138061: 30,
-    723808678981140571: 31,
-    695450494201495552: 32,
-    409654413184073748: 33,
-    715547760404856952: 34,
-    617669539231956994: 35,
-    506036828088827914: 36,
-    688026930913738807: 37,
-    490851241912565770: 38,
-    663079032656494623: 39,
-    589274124308840471: 40,
-    381522394222690306: 41,
-    722061977622675475: 42,
-    616743046565855232: 43,
-    339948052590624779: 44,
-    749573506773286923: 46,
-    767658717042180106: 47,
-    574647618257420302: 48,
-    712797807492202496: 49,
-    690112152526389252: 50,
-    756708216771051643: 51,
-    618426945356431383: 52,
-    738530998001860629: 53,
-    708999114817536000: 54,
-    527645292238209034: 55,
-    376407945459662859: 56,
-    736359802908836010: 57,
-    701454323745292369: 58,
-    804473952427835453: 59,
-    803105769238167582: 60,
-    814229954535489647: 61,
-    769762755179446332: 62
-}
-
-def validate(date_text):
-    try:
-        nicething = datetime.datetime.strptime(date_text, "%d/%m/%Y")
-        return nicething
-    except ValueError:
-        print(ValueError)
-        return None
+election_states = [{"name": "Alabama", "status": "Republican", "electors": 9},
+                   {"name": "Alaska", "status": "Republican", "electors": 3},
+                   {"name": "Arizona", "status": "Swing", "electors": 11},
+                   {"name": "Arkansas", "status": "Republican", "electors": 6},
+                   {"name": "California", "status": "Democratic", "electors": 55},
+                   {"name": "Colorado", "status": "Democratic", "electors": 9},
+                   {"name": "Connecticut", "status": "Democratic", "electors": 7},
+                   {"name": "Delaware", "status": "Democratic", "electors": 3},
+                   {"name": "Florida", "status": "Swing", "electors": 29},
+                   {"name": "Georgia", "status": "Swing", "electors": 16},
+                   {"name": "Hawaii", "status": "Democratic", "electors": 4},
+                   {"name": "Idaho", "status": "Republican", "electors": 4},
+                   {"name": "Illinois", "status": "Democratic", "electors": 20},
+                   {"name": "Indiana", "status": "Republican", "electors": 11},
+                   {"name": "Iowa", "status": "Swing", "electors": 6},
+                   {"name": "Kansas", "status": "Republican", "electors": 6},
+                   {"name": "Kentucky", "status": "Republican", "electors": 8},
+                   {"name": "Louisiana", "status": "Republican", "electors": 8},
+                   {"name": "Maine-At-Large", "status": "Democratic", "electors": 2},
+                   {"name": "Maine-District 1", "status": "Democratic", "electors": 1},
+                   {"name": "Maine-District 2", "status": "Swing", "electors": 1},
+                   {"name": "Maryland", "status": "Democratic", "electors": 10},
+                   {"name": "Massachusetts", "status": "Democratic", "electors": 11},
+                   {"name": "Michigan", "status": "Swing", "electors": 16},
+                   {"name": "Minnesota", "status": "Swing", "electors": 10},
+                   {"name": "Mississippi", "status": "Republican", "electors": 6},
+                   {"name": "Missouri", "status": "Republican", "electors": 10},
+                   {"name": "Montana", "status": "Republican", "electors": 3},
+                   {"name": "Nebraska-At-Large", "status": "Republican", "electors": 2},
+                   {"name": "Nebraska-District-1", "status": "Republican", "electors": 1},
+                   {"name": "Nebraska-District-2", "status": "Swing", "electors": 1},
+                   {"name": "Nebraska-District-3", "status": "Republican", "electors": 1},
+                   {"name": "Nevada", "status": "Swing", "electors": 6},
+                   {"name": "New Hampshire", "status": "Swing", "electors": 4},
+                   {"name": "New Jersey", "status": "Democratic", "electors": 14},
+                   {"name": "New Mexico", "status": "Democratic", "electors": 5},
+                   {"name": "New York", "status": "Democratic", "electors": 29},
+                   {"name": "North Carolina", "status": "Swing", "electors": 15},
+                   {"name": "North Dakota", "status": "Republican", "electors": 3},
+                   {"name": "Ohio", "status": "Swing", "electors": 18},
+                   {"name": "Oklahoma", "status": "Republican", "electors": 7},
+                   {"name": "Oregon", "status": "Democratic", "electors": 7},
+                   {"name": "Pennsylvania", "status": "Swing", "electors": 20},
+                   {"name": "Rhode Island", "status": "Democratic", "electors": 4},
+                   {"name": "South Carolina", "status": "Republican", "electors": 9},
+                   {"name": "South Dakota", "status": "Republican", "electors": 3},
+                   {"name": "Tennessee", "status": "Republican", "electors": 11},
+                   {"name": "Texas", "status": "Swing", "electors": 38},
+                   {"name": "Utah", "status": "Republican", "electors": 6},
+                   {"name": "Vermont", "status": "Democratic", "electors": 3},
+                   {"name": "Virginia", "status": "Swing", "electors": 13},
+                   {"name": "Washington", "status": "Democratic", "electors": 12},
+                   {"name": "Washington D.C.", "status": "Democratic", "electors": 3},
+                   {"name": "West Virginia", "status": "Republican", "electors": 5},
+                   {"name": "Wisconsin", "status": "Swing", "electors": 10},
+                   {"name": "Wyoming", "status": "Republican", "electors": 3}]
+biden_states = ["California", "Oregon", "Washington", "Arizona", "New Mexico", "California", "Minnesota",
+                "Wisconsin", "Illinois", "Michigan", "Georgia", "Pennsylvania", "Virginia", "Maryland",
+                "Washington D.C.", "Delaware", "New Jersey", "New York", "Connecticut", "Rhode Island",
+                "Massachusetts", "New Hampshire", "Vermont", "Maine-At-Large", "Hawaii", "Nevada", "Maine-District 1",
+                "Nebraska-District 2"]
 
 
 async def format_commit(commit):
@@ -132,7 +158,8 @@ async def guilds(bot):
         for count, (guild, commands) in enumerate(_servers):
             if count < 3:
                 guild_leaderboards_raw += f'#{count + 1} {guild} with {commands} commands used\n'
-        return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+        return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3',
+                                                                                                      '\U0001f949')
     else:
         return None
 
@@ -156,7 +183,8 @@ async def noliferguilds(bot):
         for count, (guild, messages) in enumerate(_servers):
             if count < 3:
                 guild_leaderboards_raw += f'#{count + 1} {guild} with {messages} messages sent\n'
-        return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3', '\U0001f949')
+        return guild_leaderboards_raw.replace('#1', '\U0001f947').replace('#2', '\U0001f948').replace('#3',
+                                                                                                      '\U0001f949')
     else:
         return None
 
@@ -274,3 +302,16 @@ async def poll_classic(message):
     await message.add_reaction('\U0001F7E5')
     await message.add_reaction("\U0001F7EA")
     await message.add_reaction("\u2754")
+
+
+async def loc_finder():
+    proc = await asyncio.create_subprocess_shell(f"cloc --json {directory}",
+                                                 stdout=asyncio.subprocess.PIPE,
+                                                 stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    if stdout:
+        results = f'{stdout.decode()}'
+    elif stderr:
+        results = f'{stderr.decode()}'
+    json_cloc = json.loads(str(results))
+    return json_cloc["header"]["n_lines"]

@@ -72,9 +72,9 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         people = [574984194024013825, 210958048691224576]
         swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fucker", "shitted", "shitting", "fucker",
                   "motherfucker", "dogshit", "bullshit", "ass", "faggot", "goddamn", "fag"]
-        alt_lists = list(f"{swear}." for swear in swears) + list(f"{swear}," for swear in swears) + list(
-            f"{swear}!" for swear in swears) + list(f"{swear}?" for swear in swears) + list(
-            f"{swear}s" for swear in swears)
+        alt_lists = [list(f"{swear}." for swear in swears) + list(f"{swear}," for swear in swears) + \
+                     list(f"{swear}!" for swear in swears) + list(f"{swear}?" for swear in swears) + \
+                     list(f"{swear}s" for swear in swears)]
         #    for swear in alt_lists:
         #        alt_lists += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in swear))))
         if message.author.id in people and message.content in alt_lists:
@@ -120,10 +120,10 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
         uptime = delta_uptime.seconds
         # Constructing the embed
         embed = embeds.twoembed(f"About",
-                                f"Owner: {DTOG} and {Anto}\n"
+                                f"Owner: {DTOG}\n"
+                                f"Artist: {Anto}\n"
                                 f"Hurricane Man: {LegitSi}\n"
                                 f"Uptime: {humanize.precisedelta(uptime)}\n")
-        embed.url = "https://discord.gg/SymdusT"
 #        embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
         # Some stats fields
         stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
@@ -145,10 +145,11 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
                                             f"Total Humans: {sum(not m.bot for m in self.bot.users):,}\n"
                                             f"Servers: {len(self.bot.guilds):,}", inline=False)
         embed.add_field(name="Operating Stats",
-                        value=f"Memory Usage: {humanize.naturalsize(self.memory.rss)} physical, {humanize.naturalsize(self.memory.vms)} virtual, {humanize.naturalsize(self.memory.uss)} dedicated to the bot\n "
+                        value=f"Lines of Code: {await useful_functions.loc_finder():,}\n"
+                              f"Memory Usage: {humanize.naturalsize(self.memory.rss)} physical, {humanize.naturalsize(self.memory.vms)} virtual, {humanize.naturalsize(self.memory.uss)} dedicated to the bot\n "
                               f"CPU Usage: {round(self.process.cpu_percent() / psutil.cpu_count(), 1)}%\n"
                               f"Operating System: {sys.platform}", inline=False)
-        invite = "https://discord.com/oauth2/authorize?client_id=769308147662979122&permissions=2147352567&scope=bot"
+        invite = "https://discord.com/oauth2/authorize?client_id=842947116954550272&permissions=8&scope=bot"
         # links and done
         formatted_commits = ""
         for c in commits:

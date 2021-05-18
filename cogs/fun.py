@@ -13,6 +13,7 @@ import asyncio
 import pycountry
 import utils.assets.operating_systems as operating_systems
 from utils.assets.jobs import jobs_list
+from utils.useful_functions import election_states as states, biden_states
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
 
@@ -537,6 +538,63 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         if operating_system["name"] == "Fedora":
             embed.url = f"https://en.wikipedia.org/wiki/Fedora_(operating_system)"
         embed.set_thumbnail(url=f"https://raw.githubusercontent.com/Compass-Bot-Team/Compass/rewrite/icons/{str(operating_system['name']).replace(' ', '%20')}.png")
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Generates a random election. All flips and electors are based off 2020 election results.")
+    async def generateelection(self, ctx):
+        republican_states = []
+        democrat_states = []
+        republicans = 0
+        democrats = 0
+        for state in states:
+            name = state["name"]
+            status = state["status"]
+            if status == "Swing":
+                coin_toss = random.randint(1, 2)
+                if coin_toss == 1:
+                    republicans += state["electors"]
+                    if name in biden_states:
+                        republican_states.append(f"**{name}**")
+                    elif name not in biden_states:
+                        republican_states.append(name)
+                elif coin_toss == 2:
+                    democrats += state["electors"]
+                    if name not in biden_states:
+                        democrat_states.append(f"**{name}**")
+                    elif name in biden_states:
+                        democrat_states.append(name)
+            elif status == "Republican":
+                republicans += state["electors"]
+                republican_states.append(name)
+            elif status == "Democratic":
+                democrats += state["electors"]
+                democrat_states.append(name)
+        if democrats < republicans:
+            winner = "Generic Republican"
+        elif republicans < democrats:
+            winner = "Generic Democrat"
+        embed = embeds.twoembed("2024 Presidential Election", f"{winner} won the election!\n"
+                                                              f"If a state is flipped, it will be in bold.")
+        embed.add_field(name="Republican Electoral Votes", value=str(republicans), inline=True)
+        embed.add_field(name="Democratic Electoral Votes", value=str(democrats), inline=True)
+        republican_states_humanized = ""
+        republican_state_count = 0
+        for state in republican_states:
+            if republican_state_count == 0:
+                republican_states_humanized += str(state)
+            else:
+                republican_states_humanized += f", {str(state)}"
+            republican_state_count += 1
+        democratic_states_humanized = ""
+        democratic_state_count = 0
+        for state in democrat_states:
+            if democratic_state_count == 0:
+                democratic_states_humanized += str(state)
+            else:
+                democratic_states_humanized += f", {str(state)}"
+            democratic_state_count += 1
+        embed.add_field(name="Republican States", value=str(republican_states_humanized), inline=False)
+        embed.add_field(name="Democratic States", value=str(democratic_states_humanized), inline=False)
         await ctx.send(embed=embed)
 
 

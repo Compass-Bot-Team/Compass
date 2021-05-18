@@ -27,7 +27,7 @@ class Music(commands.Cog):
                                               port=2333,
                                               rest_uri='http://127.0.0.1:2333',
                                               password=self.bot.config['password'],
-                                              identifier='NewBot',
+                                              identifier='Compass',
                                               region='us_south')
 
     @commands.command(help="Connects to the current message author's voice chat.")
@@ -45,7 +45,7 @@ class Music(commands.Cog):
     async def disconnect(self, ctx):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if not player.is_connected:
-            return await ctx.send(embed=embeds.failembed("NewBot isn't connected!",
+            return await ctx.send(embed=embeds.failembed("Compass isn't connected!",
                                                          "You gotta connect it. bro."))
         members = len(ctx.author.voice.channel.members)
         if ctx.author.guild_permissions.move_members or members < 3:

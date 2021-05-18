@@ -64,7 +64,7 @@ async def error_handle(bot, error, ctx):
                                                    f"**gist.github.com** for you.]({gist})"))
 
 
-class ErrorHandling(commands.Cog, name='Error Handling', description='The error handling cog for NewBot.'):
+class ErrorHandling(commands.Cog, name='Error Handling', description='The error handling cog for Compass.'):
     def __init__(self, bot):
         self.bot = bot
 

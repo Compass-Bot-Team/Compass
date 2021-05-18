@@ -3,7 +3,7 @@ from launcher import source
 from discord.ext import commands
 
 
-class NewBotHelp(commands.HelpCommand):
+class CompassHelp(commands.HelpCommand):
     def get_command_signature(self, command):
         returned = command.qualified_name
         if command.aliases:
@@ -46,7 +46,7 @@ class NewBotHelp(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         channel = self.get_destination()
-        embed = embeds.twoembed(f"NewBot help!", f"The used prefix was {self.clean_prefix}.")
+        embed = embeds.twoembed(f"Compass help!", f"The used prefix was {self.clean_prefix}.")
         async with channel.typing():
             for cog, commands in mapping.items():
                 filtered = await self.filter_commands(commands, sort=True)
@@ -68,7 +68,7 @@ class NewBotHelp(commands.HelpCommand):
 class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.help_command = NewBotHelp(command_attrs={'help': "Posts this message."})
+        self.bot.help_command = CompassHelp(command_attrs={'help': "Posts this message."})
 
 
 def setup(bot):

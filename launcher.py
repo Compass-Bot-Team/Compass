@@ -26,9 +26,9 @@ __VERSION__ = 4.6
 class NewBot(commands.Bot):
     def __init__(self):
         # Constructor
-        constructor = {"command_prefix": ["ant!", "c!"],
+        constructor = {"command_prefix": ["c!"],
                        "intents": discord.Intents.all(),
-                       "description": "NewBot is an all-in-one bot coded in discord.py."}
+                       "description": "Compass is an all-in-one bot coded in discord.py."}
         super().__init__(**constructor)
 
         ### Initialize config
@@ -61,8 +61,8 @@ class NewBot(commands.Bot):
         self.command_users = {}
         self.command_guilds = {}
         # If you want to add a cog put in "cogs.cog name"
-        self.cogs_list = ["cogs.antolib", "cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
-                          "cogs.help", "cogs.images", "cogs.moderation", "cogs.music", "cogs.stats", "cogs.tasks",
+        self.cogs_list = ["cogs.apis", "cogs.developer", "cogs.error_handling", "cogs.fun",
+                          "cogs.help", "cogs.images", "cogs.moderation", "cogs.music", "cogs.tasks",
                           "cogs.utilities", "jishaku"]
         for cog in self.cogs_list:
             self.load_extension(cog)
