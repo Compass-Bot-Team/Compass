@@ -62,39 +62,24 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
             else:
                 guild_dictionary[f"{ctx.guild} ({ctx.guild.id})"] += 1
 
-    @commands.Cog.listener()
-    async def on_command_completion(self, ctx):
-        await ctx.message.add_reaction("<:compass_bot_yes:809974729136930836>")
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        # just helping friends pls ignore this
-        people = [574984194024013825, 210958048691224576]
-        swears = ["fuck", "shit", "bitch", "bitches", "fucking", "fucker", "shitted", "shitting", "fucker",
-                  "motherfucker", "dogshit", "bullshit", "ass", "faggot", "goddamn", "fag"]
-        alt_lists = [list(f"{swear}." for swear in swears) + list(f"{swear}," for swear in swears) + \
-                     list(f"{swear}!" for swear in swears) + list(f"{swear}?" for swear in swears) + \
-                     list(f"{swear}s" for swear in swears)]
-        #    for swear in alt_lists:
-        #        alt_lists += list(map(''.join, itertools.product(*((c.upper(), c.lower()) for c in swear))))
-        if message.author.id in people and message.content in alt_lists:
-            await message.channel.send(f"<@{message.author.id}> STOP SWEARING <:TBK_witheredwojak:742475096366776370>")
-        # ok now this is actually cache stuff below this line
-        if message.author.bot or message.webhook_id is not None:
-            return
-        else:
-            other_dictionary = self.bot.guild_senders
-            if message.guild is not None:
-                if f"{message.guild} ({message.guild.id})" not in other_dictionary:
-                    other_dictionary[f"{message.guild} ({message.guild.id})"] = 1
-                else:
-                    other_dictionary[f"{message.guild} ({message.guild.id})"] += 1
-            self.bot.message_num += 1
-            member_dictionary = self.bot.message_senders
-            if message.author.id in member_dictionary:
-                member_dictionary[message.author.id] += 1
-            else:
-                member_dictionary[message.author.id] = 1
+# Down for maintenance
+#    @commands.Cog.listener()
+#    async def on_message(self, message):
+#        if message.author.bot or message.webhook_id is not None:
+#            return
+#        else:
+#            other_dictionary = self.bot.guild_senders
+#            if message.guild is not None:
+#                if f"{message.guild} ({message.guild.id})" not in other_dictionary:
+#                    other_dictionary[f"{message.guild} ({message.guild.id})"] = 1
+#                else:
+#                    other_dictionary[f"{message.guild} ({message.guild.id})"] += 1
+#            self.bot.message_num += 1
+#            member_dictionary = self.bot.message_senders
+#            if message.author.id in member_dictionary:
+#                member_dictionary[message.author.id] += 1
+#            else:
+#                member_dictionary[message.author.id] = 1
 
     @commands.is_owner()
     @commands.command(help="Adds a quote to the database of quotes. Admin only command.")
@@ -126,27 +111,27 @@ class Utilities(commands.Cog, description='All of the utility commands for the b
                                 f"Uptime: {humanize.precisedelta(uptime)}\n")
 #        embed.set_thumbnail(url="https://raw.githubusercontent.com/Compass-Bot-Team/Compass/main/github.png")
         # Some stats fields
-        stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
-                        await useful_functions.noliferusers(self.bot): "Top No Lifers",
-                        await useful_functions.guilds(self.bot): "Top Server Bot Users",
-                        await useful_functions.noliferguilds(self.bot): "Top Server No Lifers"}
-        field_inline_status = [True, True, False, False]
-        field_count = 0
+        #stats_fields = {await useful_functions.users(self.bot): "Top Bot Users",
+        #                await useful_functions.noliferusers(self.bot): "Top No Lifers",
+        #                await useful_functions.guilds(self.bot): "Top Server Bot Users",
+        #                await useful_functions.noliferguilds(self.bot): "Top Server No Lifers"}
+        #field_inline_status = [True, True, False, False]
+        #field_count = 0
         # creating the fields
-        for field in stats_fields:
-            if field is not None:
-                embed.add_field(name=stats_fields[field], value=field, inline=field_inline_status[field_count])
-            field_count += 1
+        #for field in stats_fields:
+        #    if field is not None:
+        #        embed.add_field(name=stats_fields[field], value=field, inline=field_inline_status[field_count])
+        #    field_count += 1
         # more stats
-        embed.add_field(name="Stats", value=f"Cogs: {len(self.bot.cogs):,} ({await useful_functions.cogs(self.bot)})\n"
-                                            f"Commands: {self.bot.command_num:,}\n"
-                                            f"Messages: {self.bot.message_num:,}\n"
-                                            f"Total Users: {len(self.bot.users):,}\n"
-                                            f"Total Humans: {sum(not m.bot for m in self.bot.users):,}\n"
-                                            f"Servers: {len(self.bot.guilds):,}", inline=False)
+        embed.add_field(name="Stats", value="Down for maintenance.", inline=False)
+        # f"Cogs: {len(self.bot.cogs):,} ({await useful_functions.cogs(self.bot)})\n"
+        #                                    f"Commands: {self.bot.command_num:,}\n"
+        #                                    f"Messages: {self.bot.message_num:,}\n"
+        #                                    f"Total Users: {len(self.bot.users):,}\n"
+        #                                    f"Total Humans: {sum(not m.bot for m in self.bot.users):,}\n"
+        #                                    f"Servers: {len(self.bot.guilds):,}")
         embed.add_field(name="Operating Stats",
-                        value=f"Lines of Code: {await useful_functions.loc_finder():,}\n"
-                              f"Memory Usage: {humanize.naturalsize(self.memory.rss)} physical, {humanize.naturalsize(self.memory.vms)} virtual, {humanize.naturalsize(self.memory.uss)} dedicated to the bot\n "
+                        value=f"Memory Usage: {humanize.naturalsize(self.memory.rss)} physical, {humanize.naturalsize(self.memory.vms)} virtual, {humanize.naturalsize(self.memory.uss)} dedicated to the bot\n "
                               f"CPU Usage: {round(self.process.cpu_percent() / psutil.cpu_count(), 1)}%\n"
                               f"Operating System: {sys.platform}", inline=False)
         invite = "https://discord.com/oauth2/authorize?client_id=842947116954550272&permissions=8&scope=bot"

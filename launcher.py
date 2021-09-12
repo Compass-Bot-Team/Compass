@@ -26,7 +26,7 @@ __VERSION__ = 4.6
 class NewBot(commands.Bot):
     def __init__(self):
         # Constructor
-        constructor = {"command_prefix": ["c!"],
+        constructor = {"command_prefix": ["c!", commands.when_mentioned_or()],
                        "intents": discord.Intents.all(),
                        "description": "Compass is an all-in-one bot coded in discord.py."}
         super().__init__(**constructor)
@@ -68,18 +68,17 @@ class NewBot(commands.Bot):
             self.load_extension(cog)
             useful_functions.logger.info(f"Loaded cog {cog}")
 
-    async def process_commands(self, message):
-        ctx = await self.get_context(message)
-        with open("blacklist.json") as file:
-            blacklist_file = json.load(file)
-        blacklist = blacklist_file["blacklist"]
-        humans = blacklist["humans"]
-        guilds = blacklist["guilds"]
-        if ctx.author.id in humans:
-            return
-        if ctx.guild is not None and ctx.guild.id in guilds:
-            return
-        await self.invoke(ctx)
+#    async def process_commands(self, message):
+#        with open("blacklist.json") as file:
+#            blacklist_file = json.load(file)
+#        blacklist = blacklist_file["blacklist"]
+#        humans = blacklist["humans"]
+#        guilds = blacklist["guilds"]
+#        if message.author.id in humans:
+#            return
+#        if message.guild is not None and message.guild.id in guilds:
+#            return
+#        await self.invoke(await self.get_context(message))
 
     ### Run function
     def run(self):

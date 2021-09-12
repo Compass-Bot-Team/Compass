@@ -70,7 +70,6 @@ class ErrorHandling(commands.Cog, name='Error Handling', description='The error 
 
     @commands.Cog.listener('on_command_error')
     async def error_handling(self, ctx, error):
-        await ctx.message.add_reaction("<:compass_bot_no:809974728915419177>")
         return await error_handle(self.bot, error, ctx)
 
 

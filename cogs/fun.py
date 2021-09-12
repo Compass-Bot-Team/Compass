@@ -13,7 +13,8 @@ import asyncio
 import pycountry
 import utils.assets.operating_systems as operating_systems
 from utils.assets.jobs import jobs_list
-from utils.useful_functions import election_states as states, biden_states
+from functools import partial
+from utils.executors import electiongenerator
 from utils import executors, embeds, hurricane_generator, useful_functions, checks
 from discord.ext import commands
 
@@ -252,10 +253,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
     async def text(self, ctx, *, content: commands.clean_content(use_nicknames=False, fix_channel_mentions=True)):
         await ctx.send(discord.utils.escape_mentions(content))
 
-    @commands.command(help="Generates a random hurricane season. This command only supports areas in the juristdiction of the National Hurricane Center/Central Pacific Hurricane Center."
-                           "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"
-                           "Valid locations: Atlantic, Eastern Pacific, Central Pacific")
-    async def generateseason(self, ctx, year: typing.Optional[int] = None, location: str = None):
+    async def seasongenerator(self, mode, year=None, location=None):
         cpac_status = False
         if location is None:
             location = "Atlantic"
@@ -280,11 +278,73 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         hurricanes = 0
         major_hurricanes = 0
         la_nina_or_el_nino = random.choice(['La Nina', 'El Nino'])
-        hurricane_amount = await hurricane_generator.hurricane_amount_calc(la_nina_or_el_nino, cpac_status)
+        coin_toss = random.randint(1, 2)
+        if cpac_status is True:
+            if mode != "Hypercane":
+                hurricane_amount = random.randint(1, 10)
+            else:
+                hurricane_amount = random.randint(5, 15)
+        else:
+            if la_nina_or_el_nino == 'La Nina':
+                if mode == "Normal":
+                    hurricane_amount = random.randint(5, 36)
+                else:
+                    if coin_toss == 1:
+                        hurricane_amount = random.randint(1, 20)
+                    elif coin_toss == 2:
+                        hurricane_amount = random.randint(10, 42)
+            elif la_nina_or_el_nino == 'El Nino':
+                if mode == "Normal":
+                    hurricane_amount = random.randint(1, 20)
+                if coin_toss == 1:
+                    hurricane_amount = random.randint(1, 10)
+                elif coin_toss == 2:
+                    hurricane_amount = random.randint(5, 36)
         tropical_cyclones = ""
         for _ in range(hurricane_amount):
-            chance = random.randint(1, 100)
-            mph = random.choice(await hurricane_generator.acceptable(chance))
+            if mode == "Normal":
+                chance = random.randint(1, 100)
+            elif mode == "Hypercane":
+                chance = random.randint(60, 120)
+            elif mode == "Unrealistic":
+                amount_toss = random.randint(1, 6)
+                if amount_toss == 1:
+                    chance = random.randint(30, 100)
+                elif amount_toss == 2:
+                    chance = random.randint(1, 60)
+                elif amount_toss == 3:
+                    chance = random.randint(60, 120)
+                elif amount_toss == 4:
+                    chance = random.randint(1, 30)
+                elif amount_toss == 5:
+                    chance = random.randint(20, 50)
+                elif amount_toss == 6:
+                    chance = random.randint(80, 120)
+            if chance > 0:
+                acceptable = [30, 35, 40, 45, 50]
+            if chance > 20:
+                acceptable = [35, 40, 45, 50, 60, 65]
+            if chance > 30:
+                acceptable = [40, 45, 50, 60, 65, 70]
+            if chance > 50:
+                acceptable = [45, 50, 60, 65, 70, 75]
+            if chance > 60:
+                acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100]
+            if chance > 70:
+                acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 125, 130, 140]
+            if chance > 80:
+                acceptable = [60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155,
+                              160]
+            if chance > 90:
+                acceptable = [80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
+                              145, 150, 155, 160, 165, 175, 180]
+            if chance > 95:
+                acceptable = [90, 100, 105, 110, 115, 120, 125, 130, 140,
+                              145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
+            if chance > 100:
+                acceptable = [115, 120, 125, 130, 140, 145, 150, 155, 160,
+                              165, 175, 180, 185, 190, 195, 200, 210, 220, 230]
+            mph = random.choice(acceptable)
             kph = round(mph / 1.151)
             if mph < 39:
                 name = tropical_depression_list[tropical_depressions]
@@ -293,7 +353,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
                 name = hurricane_list[tropical_storms]
                 tropical_depressions += 1
                 tropical_storms += 1
-            tropical_cyclones += f"{await hurricane_generator.classify(mph, location)} {name}, with {mph} mph winds ({kph} kph winds)\n"
+            tropical_cyclones += f"{await hurricane_generator.classify(mph, location)} {name}, with {mph} MPH/{kph} KPH winds\n"
             if mph > 74:
                 hurricanes += 1
             if mph > 110:
@@ -302,12 +362,7 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
                     f"Storms: {tropical_storms}\n"
                     f"Hurricanes: {hurricanes}\n"
                     f"Major Hurricanes: {major_hurricanes}\n")
-        embed = embeds.twoembed(f"{str(year).replace('None', str(list_of_years[0]))} {location} Hurricane Season",
-                                tropical_cyclones)
-        embed.add_field(name="Statistics", value=stats, inline=True)
-        try:
-            await ctx.send(embed=embed)
-        except discord.errors.HTTPException:
+        if len(tropical_cyclones) > 1024:
             pasteurl = await self.mystbin.post(
                 f"**__{str(year).replace('None', str(list_of_years[0]))} {location} Hurricane Season__**\n\n\n"
                 f"{tropical_cyclones}\n\n\n"
@@ -318,13 +373,29 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
                 f"Output was too long so I put it on [mystb.in.](https://mystb.in/)\n"
                 f"Check it out [**here!**]({pasteurl})")
             embed.add_field(name="Statistics", value=stats, inline=True)
-            await ctx.send(embed=embed)
+        else:
+            embed = embeds.twoembed(f"{str(year).replace('None', str(list_of_years[0]))} {location} Hurricane Season",
+                                    tropical_cyclones)
+            embed.add_field(name="Statistics", value=stats, inline=True)
+        return embed
 
-    @generateseason.error
-    async def generateseason_error(self, ctx, error):
-        await ctx.message.add_reaction("<:compass_bot_no:809974728915419177>")
-        if isinstance(error, discord.errors.HTTPException):
-            return
+    @commands.group(help="Generates a random hurricane season. This command only supports areas in the juristdiction of the National Hurricane Center/Central Pacific Hurricane Center."
+                         "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"
+                         "Valid locations: Atlantic, Eastern Pacific, Central Pacific", invoke_without_command=True)
+    async def generateseason(self, ctx, year: typing.Optional[int] = None, location: str = None):
+        await ctx.send(embed=await self.seasongenerator("Normal", year, location))
+
+    @generateseason.command(help="Generates a unrealistic and wild random hurricane season. This command only supports areas in the juristdiction of the National Hurricane Center/Central Pacific Hurricane Center."
+                                 "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"
+                                 "Valid locations: Atlantic, Eastern Pacific, Central Pacific", name="unrealistic")
+    async def _unrealistic(self, ctx, year: typing.Optional[int] = None, location: str = None):
+        await ctx.send(embed=await self.seasongenerator("Unrealistic", year, location))
+
+    @generateseason.command(help="Generates a unrealistic and very powerful random hurricane season. This command only supports areas in the juristdiction of the National Hurricane Center/Central Pacific Hurricane Center."
+                                 "Valid years: 2021, 2022, 2023, 2024, 2025, 2026"
+                                 "Valid locations: Atlantic, Eastern Pacific, Central Pacific")
+    async def hypercane(self, ctx, year: typing.Optional[int] = None, location: str = None):
+        await ctx.send(embed=await self.seasongenerator("Hypercane", year, location))
 
     @commands.group(help="The Compass bot's poll command. You can use poll classic or poll number 1-10.")
     async def poll(self, ctx):
@@ -540,62 +611,32 @@ class Fun(commands.Cog, description='''All of the bot's fun commands.'''):
         embed.set_thumbnail(url=f"https://raw.githubusercontent.com/Compass-Bot-Team/Compass/rewrite/icons/{str(operating_system['name']).replace(' ', '%20')}.png")
         await ctx.send(embed=embed)
 
-    @commands.command(help="Generates a random election. All flips and electors are based off 2020 election results.")
+    async def generator(self, mode):
+        return await self.bot.loop.run_in_executor(None, partial(electiongenerator, mode))
+
+    @commands.group(help="Generates a random United States election. All flips and electors are based off 2020 election results.", invoke_without_command=True)
     async def generateelection(self, ctx):
-        republican_states = []
-        democrat_states = []
-        republicans = 0
-        democrats = 0
-        for state in states:
-            name = state["name"]
-            status = state["status"]
-            if status == "Swing":
-                coin_toss = random.randint(1, 2)
-                if coin_toss == 1:
-                    republicans += state["electors"]
-                    if name in biden_states:
-                        republican_states.append(f"**{name}**")
-                    elif name not in biden_states:
-                        republican_states.append(name)
-                elif coin_toss == 2:
-                    democrats += state["electors"]
-                    if name not in biden_states:
-                        democrat_states.append(f"**{name}**")
-                    elif name in biden_states:
-                        democrat_states.append(name)
-            elif status == "Republican":
-                republicans += state["electors"]
-                republican_states.append(name)
-            elif status == "Democratic":
-                democrats += state["electors"]
-                democrat_states.append(name)
-        if democrats < republicans:
-            winner = "Generic Republican"
-        elif republicans < democrats:
-            winner = "Generic Democrat"
-        embed = embeds.twoembed("2024 Presidential Election", f"{winner} won the election!\n"
-                                                              f"If a state is flipped, it will be in bold.")
-        embed.add_field(name="Republican Electoral Votes", value=str(republicans), inline=True)
-        embed.add_field(name="Democratic Electoral Votes", value=str(democrats), inline=True)
-        republican_states_humanized = ""
-        republican_state_count = 0
-        for state in republican_states:
-            if republican_state_count == 0:
-                republican_states_humanized += str(state)
-            else:
-                republican_states_humanized += f", {str(state)}"
-            republican_state_count += 1
-        democratic_states_humanized = ""
-        democratic_state_count = 0
-        for state in democrat_states:
-            if democratic_state_count == 0:
-                democratic_states_humanized += str(state)
-            else:
-                democratic_states_humanized += f", {str(state)}"
-            democratic_state_count += 1
-        embed.add_field(name="Republican States", value=str(republican_states_humanized), inline=False)
-        embed.add_field(name="Democratic States", value=str(democratic_states_humanized), inline=False)
-        await ctx.send(embed=embed)
+        results = await self.generator("Normal")
+        file = discord.File(filename="map.png", fp=results["bytes"])
+        embed = results["embed"]
+        embed.set_image(url="attachment://map.png")
+        await ctx.send(file=file, embed=embed)
+
+    @generateelection.command(help="Generates a random, landslide, United States election. All flips and electors are based off 2020 election results.")
+    async def landslide(self, ctx):
+        results = await self.generator("Landslide")
+        file = discord.File(filename="map.png", fp=results["bytes"])
+        embed = results["embed"]
+        embed.set_image(url="attachment://map.png")
+        await ctx.send(file=file, embed=embed)
+
+    @generateelection.command(help="Generates a random, extremely unrealistic, United States election. All flips and electors are based off 2020 election results.")
+    async def unrealistic(self, ctx):
+        results = await self.generator("Unrealistic")
+        file = discord.File(filename="map.png", fp=results["bytes"])
+        embed = results["embed"]
+        embed.set_image(url="attachment://map.png")
+        await ctx.send(file=file, embed=embed)
 
 
 def setup(bot):

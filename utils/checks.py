@@ -103,19 +103,10 @@ class UserOrGuild(commands.Converter):
                 return ["user", user]
 
 
-def antolib():
-    def predicate(ctx):
-        return ctx.guild.id == 738530998001860629
-
-    return commands.check(predicate)
-
 
 def has_admin():
     def predicate(ctx):
-        bot = ctx.bot
-        guild = bot.get_guild(738530998001860629)
-        role = guild.get_role(793211817174237215)
-        if ctx.author.id in [member.id for member in role.members] or ctx.author.id in config["owners"]:
+        if ctx.author.id in config["owners"]:
             return True
         else:
             return False
@@ -125,22 +116,7 @@ def has_admin():
 
 def meme_quote_perms():
     def predicate(ctx):
-        bot = ctx.bot
-        guild = bot.get_guild(738530998001860629)
-        role = guild.get_role(793211817174237215)
-        if ctx.author.id in [member.id for member in role.members] or ctx.author.id in config["owners"] or ctx.author.id in config["whitelisted"]:
-            return True
-        else:
-            return False
-    return commands.check(predicate)
-
-
-def globus_admin():
-    def predicate(ctx):
-        bot = ctx.bot
-        guild = bot.get_guild(784126280089337887)
-        role = guild.get_role(784127369492299788)
-        if ctx.author.id in [member.id for member in role.members]:
+        if ctx.author.id in config["owners"] or ctx.author.id in config["whitelisted"]:
             return True
         else:
             return False

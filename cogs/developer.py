@@ -53,28 +53,43 @@ class Developer(commands.Cog, description='A bunch of commands for the owner of 
         await ctx.message.add_reaction("<:compass_bot_no:809974728915419177>")
         return await ctx.send(error)
 
-    @commands.is_owner()
-    @commands.command(help='Reloads a cog. Use the cog list command to get the full list of cogs.')
-    async def reload(self, ctx, *, extension: str):
-        alls = ["all", "All"]
-        if extension in alls:
-            for cog in self.bot.cogs_tuple:
-                self.bot.reload_extension(cog)
-                useful_functions.logger.info(f"Loaded cog {cog}")
-            return await ctx.send(embed=embeds.twoembed(f"Success!",
-                                                        f"Reloaded every cog."))
-        elif ", " in extension:
-            extensions = extension.split(", ")
-            for cog in extensions:
-                self.bot.reload_extension(str("cogs." + cog))
-                useful_functions.logger.info(f"Reloaded cog {cog}")
-            return await ctx.send(embed=embeds.twoembed(f"Success!",
-                                                        f"Reloaded cogs.{extension}."))
+    @commands.command(help="Reloads a cog.")
+    async def cog(self, ctx, group: str, *, cog: str):
+        is_cogs_list_real = False
+        if ", " in cog or " " in cog and ", " not in cog:
+            is_cogs_list_real = True
+            cog.replace(" ", ",").replace(",,", ",")
+            first_cogs_list = cog.split(",")
         else:
-            self.bot.reload_extension(str("cogs." + extension))
-            useful_functions.logger.info(f"Reloaded cog cogs.{extension}")
-            await ctx.send(embed=embeds.twoembed(f"Success!",
-                                                 f"Reloaded cogs.{extension}."))
+            first_cogs_list = [cog]
+        if group not in ["reload", "unload", "load"]:
+            return await ctx.send(embed=embeds.failembed("Invalid group!", "The only available groups are: reload, load, unload."))
+        second_cogs_list = []
+        for cog in first_cogs_list:
+            second_cogs_list.append("jishaku" if cog == "jishaku" else f"cogs.{cog}")
+        for cog in second_cogs_list:
+            if group == "reload":
+                self.bot.reload_extension(cog)
+            elif group == "load":
+                self.bot.load_extension(cog)
+            elif group == "unload":
+                self.bot.unload_extension(cog)
+        third_cogs_list = ""
+        if is_cogs_list_real is True:
+            amount_of_cogs = len(second_cogs_list)
+            cog_count = 0
+            for cog in second_cogs_list:
+                cog_count += 1
+                if cog_count != 0:
+                    third_cogs_list += ", "
+                if cog_count-amount_of_cogs == 0:
+                    third_cogs_list += "and "
+                if cog == "jishaku":
+                    third_cogs_list += "The Jishaku module"
+                elif cog != "jishaku":
+                    third_cogs_list += cog+".py"
+        cog = cog + ".py" if cog != "jishaku" else "the Jishaku module"
+        await ctx.send(embed=embeds.twoembed(f"{group.title()}ed {cog}", f"{cog} was {group}ed."))
 
     @commands.is_owner()
     @commands.command(help="Closes the bot connection. Owner command.", aliases=["stop"])

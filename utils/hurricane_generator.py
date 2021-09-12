@@ -31,29 +31,6 @@ atlauxlist = ["Adria", "Braylen", "Caridad", "Deshawn", "Emery", "Foster", "Gemm
 epacauxlist = ["Aidan", "Bruna", "Carmelo", "Daniella", "Esteban", "Flor", "Gerardo", "Hedda", "Izzy", "Jacinta", "Kenito", "Luna", "Marina", "Nancy", "Ovidio", "Pia", "Rey", "Skylar", "Teo", "Violeta", "Wilfredo", "Xinia", "Yariel", "Zoe"]
 
 
-async def acceptable(chance):
-    if chance > 0:
-        acceptable = [30, 35, 40, 45, 50]
-    if chance > 20:
-        acceptable = [35, 40, 45, 50, 60, 65]
-    if chance > 30:
-        acceptable = [40, 45, 50, 60, 65, 70]
-    if chance > 50:
-        acceptable = [45, 50, 60, 65, 70, 75]
-    if chance > 60:
-        acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100]
-    if chance > 70:
-        acceptable = [50, 60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 125, 130, 140]
-    if chance > 80:
-        acceptable = [60, 65, 70, 75, 80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140, 145, 150, 155, 160]
-    if chance > 90:
-        acceptable = [80, 85, 90, 100, 105, 110, 115, 120, 125, 130, 140,
-                      145, 150, 155, 160, 165, 175, 180]
-    if chance > 95:
-        acceptable = [90, 100, 105, 110, 115, 120, 125, 130, 140,
-                      145, 150, 155, 160, 165, 175, 180, 185, 190, 195]
-    return acceptable
-
 async def classify(mph, location):
     global classification
     if mph > 0:
@@ -111,15 +88,6 @@ async def hurricane_list_calc(year, location):
     elif location == "Eastern Pacific":
         return hurricane_list+epacauxlist
 
-
-async def hurricane_amount_calc(la_nina_or_el_nino, cpac=False):
-    if cpac is not False:
-        return random.randint(1, 10)
-    else:
-        if la_nina_or_el_nino == 'La Nina':
-            return random.randint(5, 36)
-        elif la_nina_or_el_nino == 'El Nino':
-            return random.randint(2, 13)
 
 months = {"January": {"num": 1},
           "February": {"num": 2},
