@@ -1,0 +1,24 @@
+owners:
+  - You (or several people's) IDs
+whitelisted:
+  - Any whitelisted users
+password: Bot password
+mongodbserver: MongoDB server (legacy)
+token: Bot Token
+weatherapikey: OpenWeatherMap API Key
+googleapikey: Google API Key
+hypixelapikey: Hypixel API Key
+githubkey: Github API key
+nasakey: Nasa API Key
+travitiakey: Travitia API Key
+redditauth:
+  client_id:
+    Reddit Client ID
+  client_secret:
+    Reddit Client Secret
+  user_agent:
+    Reddit User Agent
+  username:
+    Reddit Username
+zanekey: Zane API Key
+urbankey: RapidAPI Urban Dictionary Key
