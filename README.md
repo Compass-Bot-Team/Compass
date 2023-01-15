@@ -1,5 +1,5 @@
 ## Compass
-Compass is an all-in-one bot coded in Python using [discord.py.](https://github.com/Rapptz/discord.py)
+(not updated)
 
 ![LOGO](icons/LOGO_480_480.png)
 
